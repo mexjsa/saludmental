@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard CONASAMA | Estadísticas de Salud Mental</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body class="dashboard-body">
+    <div class="glow-bg"></div>
+
+    <nav class="dashboard-nav">
+        <div class="nav-brand">
+            <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA"
+                class="nav-logo">
+            <div class="brand-text">
+                <h1>CONASAMA</h1>
+                <span>Panel de Inteligencia de Salud Mental</span>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="refresh-data" class="btn-refresh">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                    <path d="M16 16h5v5" />
+                </svg>
+                Actualizar Datos
+            </button>
+        </div>
+    </nav>
+
+    <main class="dashboard-content">
+        <header class="stats-overview">
+            <div class="stat-card glass">
+                <h3>Total Registros</h3>
+                <div class="stat-value" id="total-users">0</div>
+                <p class="stat-meta">Leads acumulados</p>
+            </div>
+            <div class="stat-card glass alert">
+                <h3>Alertas Rojas</h3>
+                <div class="stat-value" id="total-emergencies">0</div>
+                <p class="stat-meta">Riesgo suicida detectado</p>
+            </div>
+            <div class="stat-card glass warning">
+                <h3>Riesgo Alto/Sustancias</h3>
+                <div class="stat-value" id="total-atention">0</div>
+                <p class="stat-meta">Requiere seguimiento</p>
+            </div>
+            <div class="stat-card glass healthy">
+                <h3>Riesgo Leve</h3>
+                <div class="stat-value" id="total-leve">0</div>
+                <p class="stat-meta">Estabilidad detectada</p>
+            </div>
+        </header>
+
+        <section class="charts-section">
+            <div class="chart-container glass">
+                <h3>Distribución por Edad</h3>
+                <canvas id="ageChart"></canvas>
+            </div>
+            <div class="chart-container glass">
+                <h3>Malestar Psicológico (Promedio K10/PHQ9)</h3>
+                <canvas id="riskChart"></canvas>
+            </div>
+        </section>
+
+        <section class="table-section glass">
+            <div class="table-header">
+                <h3>Detalle de Registros Recientes</h3>
+                <div class="table-filters">
+                    <input type="text" id="search-name" placeholder="Buscar por nombre/apodo...">
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="leads-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Nombre</th>
+                            <th>Edad</th>
+                            <th>K10</th>
+                            <th>PHQ9</th>
+                            <th>Sustancias</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-tbody">
+                        <tr>
+                            <td colspan="7" class="loading-state">Cargando registros...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="dashboard.js"></script>
+</body>
+
+</html>
