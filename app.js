@@ -1,6 +1,6 @@
 // CONASAMA Chatbot Core Logic
 import { db } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
 
@@ -26,62 +26,82 @@ let currentQuestionIndex = 0;
 
 // Scales Definitions
 const K10_QUESTIONS = [
-    "¿Con qué frecuencia te has sentido cansado(a) sin ninguna buena razón?",
-    "¿Con qué frecuencia te has sentido nervioso(a)?",
-    "¿Con qué frecuencia te has sentido tan nervioso(a) que nada te podía calmar?",
-    "¿Con qué frecuencia te has sentido desesperado(a)?",
-    "¿Con qué frecuencia te has sentido inquieto(a) o intranquilo(a)?",
-    "¿Con qué frecuencia te has sentido tan inquieto(a) que no has podido mantenerte quieto(a)?",
-    "¿Con qué frecuencia te has sentido deprimido(a)?",
-    "¿Con qué frecuencia has sentido que todo lo que haces representa un gran esfuerzo?",
-    "¿Con qué frecuencia te has sentido tan triste que nada podía animarte?",
-    "¿Con qué frecuencia te has sentido un inútil?"
+    "¿Qué tan seguido te has sentido cansado/a o agotado/a sin una buena razón?",
+    "¿Qué tan seguido te has sentido muy nervioso/a o intranquilo/a?",
+    "¿Qué tan seguido te has sentido tan desesperado/a o triste que nada lograba animarte?",
+    "¿Qué tan seguido has sentido que todo lo que haces te cuesta muchísimo esfuerzo?",
+    "¿Qué tan seguido te has sentido inútil o que no vales nada?"
 ];
 
 const PHQ9_QUESTIONS = [
-    "Poco interés o placer en hacer las cosas.",
-    "Se ha sentido triste, deprimido(a) o sin esperanza.",
-    "Dificultad para dormir o permanecer dormido(a), o dormir demasiado.",
-    "Se ha sentido cansado(a) o con poca energía.",
-    "Poco apetito o ha comido en exceso.",
-    "Se ha sentido mal con usted mismo(a) (o que es un fracaso o que ha decepcionado a su familia o a sí mismo/a).",
-    "Dificultad para concentrarse en las cosas (como leer el periódico o ver televisión).",
-    "Moverse o hablar tan lento que otras personas podrían haberlo notado. O lo contrario, estar tan inquieto(a) que se ha estado moviendo mucho más de lo normal.",
-    "Pensamientos de que sería mejor estar muerto(a) o de hacerse daño de alguna manera."
+    "¿Has tenido poco interés o has dejado de disfrutar las cosas que antes te gustaban?",
+    "¿Te has sentido bajoneado/a, deprimido/a o sin esperanzas?",
+    "¿Has tenido problemas con tu sueño? (Ya sea no poder dormir o dormir demasiado).",
+    "¿Has notado cambios en tu apetito? (Comer muy poquito o comer en exceso).",
+    "¿Has tenido problemas para concentrarte en la escuela, el trabajo o incluso al ver una serie?"
+];
+
+const SUBSTANCE_ITEMS = [
+    "Tabaco o vapeadores",
+    "Bebidas con alcohol (cerveza, vino, azulitos, etc.)",
+    "Marihuana, pastillas sin receta médica (como tranquilizantes) o algún otro tipo de droga."
 ];
 
 // Phase Configuration
 const FLOW = {
     WELCOME: {
         messages: [
-            "Hola 👋",
-            "Soy un asistente virtual de CONASAMA diseñado para ayudarte a revisar cómo te estás sintiendo.",
-            "No soy un psicólogo, pero puedo orientarte y conectarte con ayuda si lo necesitas.",
-            "Antes de empezar, ¿podrías aceptar nuestro aviso de privacidad?"
+            "¡Hola! 👋 Soy un asistente virtual (un robot) programado para escucharte y ayudarte a entender tus emociones.",
+            "Todo lo que hables aquí es un espacio seguro y confidencial.",
+            "Para continuar, necesito que leas y aceptes nuestro Aviso de Privacidad. ¿Estás de acuerdo?"
         ],
         options: [
-            { text: "Aceptar y continuar", nextPhase: 'IDENTITY' },
-            { text: "No aceptar", action: () => terminateChat("Entiendo. Si cambias de opinión, aquí estaremos para apoyarte. ¡Cuídate!") }
+            { text: "Sí, estoy de acuerdo", nextPhase: 'IDENTITY' },
+            { text: "No, gracias", action: () => terminateChat("Entiendo. Si cambias de opinión, aquí estaremos para apoyarte. ¡Cuídate!") }
         ]
     },
     IDENTITY: {
-        messages: ["¡Excelente! Vamos a empezar con unas preguntas rápidas.", "¿Cómo te gustaría que te llame? (Puedes usar un apodo)"],
+        messages: ["¡Súper! Para sentirnos más en confianza, ¿cómo te gustaría que te llame? (Puede ser tu nombre o un apodo)"],
         input: true,
-        nextPhase: 'AGE'
+        onInput: (val) => {
+            userData.name = val;
+            startPhase('AGE');
+        }
     },
     AGE: {
-        messages: ["Mucho gusto. ¿En qué rango de edad te encuentras?"],
+        messages: ["Mucho gusto, {name}. ¿Cuántos años tienes? Elige el rango en el que estás:"],
         options: [
-            { text: "12-14 años", value: "12-14" },
-            { text: "15-17 años", value: "15-17" },
-            { text: "18-21 años", value: "18-21" },
-            { text: "22-25 años", value: "22-25" },
-            { text: "26-29 años", value: "26-29" }
+            { text: "12 a 14", value: "12-14" },
+            { text: "15 a 17", value: "15-17" },
+            { text: "18 a 21", value: "18-21" },
+            { text: "22 a 25", value: "22-25" },
+            { text: "26 a 29", value: "26-29" }
         ],
-        nextPhase: 'K10'
+        nextPhase: 'GENDER'
+    },
+    GENDER: {
+        messages: ["¿Con qué género te identificas más?"],
+        options: [
+            { text: "Mujer", value: "mujer" },
+            { text: "Hombre", value: "hombre" },
+            { text: "No binario", value: "no-binario" },
+            { text: "Otro", value: "otro" },
+            { text: "Prefiero no decirlo", value: "n-a" }
+        ],
+        nextPhase: 'EMERGENCY_CONTACT'
+    },
+    EMERGENCY_CONTACT: {
+        messages: ["A veces, si noto que estás pasando por un momento muy difícil o de riesgo, mi deber es asegurarme de que estés a salvo y conectarte con un humano.", "¿Me podrías compartir un teléfono o correo de contacto solo para emergencias?"],
+        options: [
+            { text: "Escribir contacto", action: () => showInputFallback(val => { userData.emergencyContact = val; startPhase('K10'); }) },
+            { text: "Prefiero saltar esto por ahora", nextPhase: 'K10' }
+        ]
     },
     K10: {
-        messages: ["Gracias. Ahora, durante los últimos 30 días..."],
+        messages: [
+            "Gracias por compartir esto conmigo. Ahora, me gustaría saber cómo te has sentido en el último mes.",
+            "No hay respuestas correctas o incorrectas. Solo elige la opción que mejor describa cómo te sientes."
+        ],
         questions: K10_QUESTIONS,
         options: [
             { text: "Nunca", value: 1 },
@@ -93,7 +113,7 @@ const FLOW = {
         nextPhase: 'PHQ9'
     },
     PHQ9: {
-        messages: ["Casi terminamos. Durante las últimas 2 semanas, ¿con qué frecuencia te han molestado estos problemas?"],
+        messages: ["Ahora, pensemos solo en las últimas dos semanas. ¿Qué tan seguido te han molestado estas situaciones?"],
         questions: PHQ9_QUESTIONS,
         options: [
             { text: "Ningún día", value: 0 },
@@ -101,29 +121,32 @@ const FLOW = {
             { text: "Más de la mitad de los días", value: 2 },
             { text: "Casi todos los días", value: 3 }
         ],
-        nextPhase: 'CHECK_SUICIDE_PHASE'
+        nextPhase: 'PROTOCOL_SAFETY'
     },
-    CHECK_SUICIDE_PHASE: {
-        action: () => {
-            if (userData.suicideFlag) {
-                startPhase('SUICIDE_CHECK');
-            } else {
-                startPhase('SUBSTANCES');
-            }
-        }
-    },
-    SUICIDE_CHECK: {
-        messages: ["Me importa mucho lo que estás pasando.", "¿Has tenido algún plan específico para hacerte daño o tienes acceso a algo que pueda ser peligroso?"],
+    PROTOCOL_SAFETY: {
+        messages: ["Las siguientes preguntas son muy importantes para saber cómo cuidarte mejor:"],
+        questions: ["En las últimas dos semanas, ¿has tenido pensamientos de que sería mejor no estar vivo/a o has pensado en hacerte daño?"],
         options: [
-            { text: "He tenido planes y/o tengo los medios", value: 'HIGH', suicideFlag: true },
-            { text: "He tenido pensamientos pero no planes", value: 'MID', suicideFlag: true },
-            { text: "Solo fue una idea pasajera", value: 'LOW', suicideFlag: true },
-            { text: "Prefiero no hablar de esto", value: 'PRIVATE' }
+            { text: "No, nunca", value: 0, nextPhase: 'SUBSTANCES' },
+            { text: "Sí, lo he pensado", value: 1, nextPhase: 'CSSRS' }
+        ]
+    },
+    CSSRS: {
+        messages: ["Escucho tu dolor y quiero ayudarte."],
+        questions: [
+            "¿Últimamente has deseado irte a dormir y ya no despertar?",
+            "¿Has pensado en cómo quitarte la vida o tienes algún plan específico para hacerlo?",
+            "¿Tienes los medios (como pastillas u otros objetos) o has preparado algo para llevar a cabo ese plan?"
+        ],
+        options: [
+            { text: "Sí", value: 1 },
+            { text: "No", value: 0 }
         ],
         nextPhase: 'SUBSTANCES'
     },
     SUBSTANCES: {
-        messages: ["Finalmente, durante los últimos 30 días, ¿con qué frecuencia has consumido alcohol, tabaco/vape o alguna otra sustancia?"],
+        messages: ["Ya casi terminamos. A veces, cuando nos sentimos mal, usamos ciertas cosas para intentar apagar el malestar.", "En el último año, ¿con qué frecuencia has consumido algo de esto?"],
+        questions: SUBSTANCE_ITEMS,
         options: [
             { text: "Nunca", value: 0 },
             { text: "1 o 2 veces", value: 1 },
@@ -179,6 +202,7 @@ function renderOptions(options, onSelect) {
         btn.className = 'btn-option';
         btn.innerText = opt.text;
         btn.onclick = () => {
+            optionsContainer.innerHTML = ''; // Clear options immediately
             addMessage(opt.text, 'user');
             onSelect(opt);
         };
@@ -208,16 +232,17 @@ async function startPhase(phaseName) {
     }
 
     if (phase.messages) {
-        await botSpeak(phase.messages);
+        const msgs = phase.messages.map(m => m.replace('{name}', userData.name || 'amigo/a'));
+        await botSpeak(msgs);
     }
 
-    if (phase.options) {
-        renderOptions(phase.options, handleOptionSelect);
-    } else if (phase.input) {
-        showInputFallback(nextFromInput);
-    } else if (phase.questions) {
+    if (phase.questions) {
         currentQuestionIndex = 0;
         askNextQuestion();
+    } else if (phase.options) {
+        renderOptions(phase.options, handleOptionSelect);
+    } else if (phase.input) {
+        showInputFallback(phase.onInput || nextFromInput);
     }
 }
 
@@ -243,26 +268,47 @@ function handleOptionSelect(opt) {
     if (currentPhase === 'AGE') {
         userData.ageRange = opt.value;
     }
+    if (currentPhase === 'SUBSTANCES' && opt.value > 0) {
+        userData.substanceFlag = true;
+    }
     if (opt.suicideFlag) {
         userData.suicideFlag = true;
     }
     startPhase(FLOW[currentPhase].nextPhase || opt.nextPhase);
 }
 
-function handleQuestionResponse(opt) {
+async function handleQuestionResponse(opt) {
     const val = opt.value;
+    const phase = FLOW[currentPhase];
+
+    // Store response
     if (currentPhase === 'K10') {
         userData.k10Score += val;
+        if (currentQuestionIndex === 4 && userData.k10Score >= 18) {
+            await botSpeak(["Lamento que estés sintiendo todo esto, debe ser muy pesado. Lo estás haciendo muy bien al contármelo. Sigamos."]);
+        }
     } else if (currentPhase === 'PHQ9') {
         userData.phq9Score += val;
-        // Check Question 9 of PHQ-9 (index 8)
-        if (currentQuestionIndex === 8 && val > 0) {
-            userData.suicideFlag = true;
-        }
+    } else if (currentPhase === 'PROTOCOL_SAFETY' || currentPhase === 'CSSRS') {
+        if (val === 1) userData.suicideFlag = true;
+    } else if (currentPhase === 'SUBSTANCES') {
+        if (val > 0) userData.substanceFlag = true;
     }
 
     currentQuestionIndex++;
-    askNextQuestion();
+
+    // Check for branching nextPhase in option
+    if (opt.nextPhase) {
+        startPhase(opt.nextPhase);
+        return;
+    }
+
+    // Continue to next question or next phase
+    if (currentQuestionIndex < phase.questions.length) {
+        askNextQuestion();
+    } else {
+        startPhase(phase.nextPhase);
+    }
 }
 
 function showInputFallback(onSend) {
@@ -335,50 +381,62 @@ async function saveResult(data) {
 }
 
 async function calculateFinalResults() {
+    optionsContainer.innerHTML = '';
+    showTypingIndicator();
     updateProgress(100);
-    await botSpeak(["He analizado tus respuestas. Dame un momento para procesar..."]);
 
-    let riskLevel = "Leve";
+    // Save to Firebase ONLY if configured
+    if (isFirebaseConfigured()) {
+        try {
+            await addDoc(collection(db, CHAT_LOG_COLLECTION), {
+                ...userData,
+                timestamp: serverTimestamp()
+            });
+        } catch (e) { console.error("Error saving results:", e); }
+    } else {
+        console.warn("⚠️ Firebase no configurado. Saltando persistencia para evitar block.");
+        console.log("Resultados (Local):", userData);
+    }
+
+    await new Promise(r => setTimeout(r, 1000));
+    removeTypingIndicator();
+
+    // 🚨 ALERTA ROJA (Protocolo más directo)
     if (userData.suicideFlag) {
-        riskLevel = "ALERTA ROJA";
-    } else if (userData.phq9Score >= 20 || userData.k10Score >= 30) {
-        riskLevel = "Muy Severo";
-    } else if (userData.phq9Score >= 15 || userData.k10Score >= 25) {
-        riskLevel = "Alto";
-    } else if (userData.phq9Score >= 10 || userData.k10Score >= 20) {
-        riskLevel = "Moderado";
+        optionsContainer.innerHTML = '<div class="handoff-alert">🚨 Transfiriendo a atención humana urgente...</div>';
+        await botSpeak([
+            "Lo que me cuentas es muy importante y quiero asegurarme de que estés a salvo.",
+            "En este momento voy a transferir este chat con un psicólogo especializado para que te atienda personalmente. No te retires.",
+            "Si necesitas hablar con alguien YA, pulsa el botón de abajo o llama al 800 911 2000."
+        ]);
+        document.getElementById('emergency-modal').style.display = 'flex';
+        return;
     }
 
-    await saveResult({ ...userData, riskLevel });
-    await showResultsUI(riskLevel);
-}
-
-async function showResultsUI(level) {
-    const results = {
-        "Leve": {
-            msgs: ["Tus resultados indican un nivel de malestar bajo.", "Te recomiendo seguir cuidando tu sueño y alimentación. ¡Estás haciendo un buen trabajo!"],
-            resources: ["Guía de Autocuidado", "Ejercicios de Respiración"]
-        },
-        "Moderado": {
-            msgs: ["Parece que estás pasando por un momento algo difícil.", "Sería buena idea hablar con un profesional preventivamente."],
-            resources: ["Directorio de Centros CONASAMA", "Consejos para la Ansiedad"]
-        },
-        "Alto": {
-            msgs: ["Tus respuestas muestran que estás experimentando un malestar significativo.", "Es muy importante que busques apoyo profesional pronto."],
-            resources: ["Línea de la Vida (800 911 2000)", "Agendar valoración"]
-        },
-        "ALERTA ROJA": {
-            msgs: ["Lo que me cuentas es muy importante.", "No tienes que pasar por esto solo.", "Te recomiendo hablar ahora mismo con alguien que pueda ayudarte."],
-            action: () => document.getElementById('emergency-modal').style.display = 'flex'
-        }
-    };
-
-    const res = results[level];
-    await botSpeak(res.msgs);
-
-    if (level === "ALERTA ROJA") {
-        res.action();
+    // ⚠️ Riesgo Moderado/Alto o Sustancias
+    if (userData.phq9Score >= 10 || userData.k10Score >= 25 || userData.substanceFlag) {
+        await botSpeak([
+            `¡Gracias por tu sinceridad, ${userData.name}! Noto que estás cargando con mucho malestar y esto no es algo que debas enfrentar sin apoyo.`,
+            "Me gustaría conectarte ahora mismo con un asesor de la Línea de la Vida para que te orienten mejor. Es gratuito y confidencial.",
+            "¿Te parece bien que te comunique con ellos?"
+        ]);
+        renderOptions([
+            { text: "Sí, conectar ahora", action: () => window.open('tel:8009112000') },
+            { text: "Prefiero después", action: () => addMessage("Entiendo. Recuerda que la ayuda está a una llamada de distancia. Cuídate mucho.", 'bot') }
+        ], handleOptionSelect);
+        return;
     }
+
+    // ✅ Riesgo Leve
+    await botSpeak([
+        "¡Listo, terminamos! Eres muy valiente por revisar cómo te sientes.",
+        "Por lo que me cuentas, parece que estás pasando por un estrés normal. Sigue practicando el autocuidado.",
+        "Aquí te dejo una guía que puede ayudarte. Si te sientes peor, vuelve a escribirme en cualquier momento."
+    ]);
+    renderOptions([
+        { text: "Ver guía de autocuidado", action: () => window.open('https://www.gob.mx/salud/documentos/guia-de-autocuidado-para-la-salud-mental') },
+        { text: "Terminar chat", action: () => terminateChat("¡Cuídate mucho!") }
+    ], handleOptionSelect);
 }
 
 // Initialization
@@ -386,5 +444,4 @@ document.addEventListener('DOMContentLoaded', () => {
     startPhase('WELCOME');
 });
 
-window.closeModal = () => document.getElementById('emergency-modal').style.display = 'none';
 window.closeModal = () => document.getElementById('emergency-modal').style.display = 'none';
