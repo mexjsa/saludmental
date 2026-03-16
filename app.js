@@ -36,9 +36,7 @@ const K10_QUESTIONS = [
 const PHQ9_QUESTIONS = [
     "¿Has tenido poco interés o has dejado de disfrutar las cosas que antes te gustaban?",
     "¿Te has sentido bajoneado/a, deprimido/a o sin esperanzas?",
-    "¿Has tenido problemas con tu sueño? (Ya sea no poder dormir o dormir demasiado).",
-    "¿Has notado cambios en tu apetito? (Comer muy poquito o comer en exceso).",
-    "¿Has tenido problemas para concentrarte en la escuela, el trabajo o incluso al ver una serie?"
+    "¿Has tenido problemas con tu sueño? (Ya sea no poder dormir o dormir demasiado)."
 ];
 
 const SUBSTANCE_ITEMS = [
@@ -121,38 +119,6 @@ const FLOW = {
             { text: "Más de la mitad de los días", value: 2 },
             { text: "Casi todos los días", value: 3 }
         ],
-        nextPhase: 'PROTOCOL_SAFETY'
-    },
-    PROTOCOL_SAFETY: {
-        messages: ["Las siguientes preguntas son muy importantes para saber cómo cuidarte mejor:"],
-        questions: ["En las últimas dos semanas, ¿has tenido pensamientos de que sería mejor no estar vivo/a o has pensado en hacerte daño?"],
-        options: [
-            { text: "No, nunca", value: 0, nextPhase: 'SUBSTANCES' },
-            { text: "Sí, lo he pensado", value: 1, nextPhase: 'CSSRS' }
-        ]
-    },
-    CSSRS: {
-        messages: ["Escucho tu dolor y quiero ayudarte."],
-        questions: [
-            "¿Últimamente has deseado irte a dormir y ya no despertar?",
-            "¿Has pensado en cómo quitarte la vida o tienes algún plan específico para hacerlo?",
-            "¿Tienes los medios (como pastillas u otros objetos) o has preparado algo para llevar a cabo ese plan?"
-        ],
-        options: [
-            { text: "Sí", value: 1 },
-            { text: "No", value: 0 }
-        ],
-        nextPhase: 'SUBSTANCES'
-    },
-    SUBSTANCES: {
-        messages: ["Ya casi terminamos. A veces, cuando nos sentimos mal, usamos ciertas cosas para intentar apagar el malestar.", "En el último año, ¿con qué frecuencia has consumido algo de esto?"],
-        questions: SUBSTANCE_ITEMS,
-        options: [
-            { text: "Nunca", value: 0 },
-            { text: "1 o 2 veces", value: 1 },
-            { text: "Mensualmente", value: 2 },
-            { text: "Semanalmente o más", value: 3 }
-        ],
         nextPhase: 'RESULTS_CALC'
     },
     RESULTS_CALC: {
@@ -232,7 +198,7 @@ async function startPhase(phaseName) {
     }
 
     if (phase.messages) {
-        const msgs = phase.messages.map(m => m.replace('{name}', userData.name || 'amigo/a'));
+        const msgs = getPhaseMessages(phaseName);
         await botSpeak(msgs);
     }
 
@@ -244,6 +210,24 @@ async function startPhase(phaseName) {
     } else if (phase.input) {
         showInputFallback(phase.onInput || nextFromInput);
     }
+}
+
+function getPhaseMessages(phaseName) {
+    const phase = FLOW[phaseName];
+    if (!phase.messages) return [];
+    
+    let msgs = [...phase.messages];
+    const age = userData.ageRange;
+
+    // Adapting tone based on PRD: 12-14 simple, 15-17 close, 22-29 direct
+    if (age === '12-14') {
+        if (phaseName === 'K10') msgs = ["Gracias por compartir. Ahora cuéntame cómo te has sentido este último mes. No hay respuestas malas, tú solo elige lo que sientas."];
+        if (phaseName === 'PHQ9') msgs = ["Ahora pensemos en estas últimas dos semanas. ¿Qué tan seguido te ha pasado esto?"];
+    } else if (age === '22-25' || age === '26-29') {
+        if (phaseName === 'K10') msgs = ["Procederemos con la Escala K10 para evaluar su malestar psicológico en los últimos 30 días.", "Por favor, seleccione la opción que mejor describa su frecuencia de síntomas."];
+    }
+
+    return msgs.map(m => m.replace('{name}', userData.name || 'amigo/a'));
 }
 
 async function askNextQuestion() {
@@ -289,10 +273,6 @@ async function handleQuestionResponse(opt) {
         }
     } else if (currentPhase === 'PHQ9') {
         userData.phq9Score += val;
-    } else if (currentPhase === 'PROTOCOL_SAFETY' || currentPhase === 'CSSRS') {
-        if (val === 1) userData.suicideFlag = true;
-    } else if (currentPhase === 'SUBSTANCES') {
-        if (val > 0) userData.substanceFlag = true;
     }
 
     currentQuestionIndex++;
@@ -304,6 +284,11 @@ async function handleQuestionResponse(opt) {
     }
 
     // Continue to next question or next phase
+    if (userData.suicideFlag && currentPhase !== 'SUBSTANCES') {
+        calculateFinalResults();
+        return;
+    }
+
     if (currentQuestionIndex < phase.questions.length) {
         askNextQuestion();
     } else {
@@ -403,26 +388,34 @@ async function calculateFinalResults() {
 
     // 🚨 ALERTA ROJA (Protocolo más directo)
     if (userData.suicideFlag) {
-        optionsContainer.innerHTML = '<div class="handoff-alert">🚨 Transfiriendo a atención humana urgente...</div>';
         await botSpeak([
             "Lo que me cuentas es muy importante y quiero asegurarme de que estés a salvo.",
-            "En este momento voy a transferir este chat con un psicólogo especializado para que te atienda personalmente. No te retires.",
-            "Si necesitas hablar con alguien YA, pulsa el botón de abajo o llama al 800 911 2000."
+            "En este momento voy a transferir este chat con un psicólogo especializado para que te atienda personalmente. No te retires."
         ]);
+        
+        optionsContainer.innerHTML = `
+            <div class="handoff-alert">🚨 Transfiriendo a atención humana urgente...</div>
+            <button class="btn-option" style="background: var(--accent); color: white; border: none; margin-top: 10px;" onclick="window.open('tel:8009112000')">
+                Llamar a Línea de la Vida (800 911 2000)
+            </button>
+        `;
+        
         document.getElementById('emergency-modal').style.display = 'flex';
         return;
     }
 
-    // ⚠️ Riesgo Moderado/Alto o Sustancias
-    if (userData.phq9Score >= 10 || userData.k10Score >= 25 || userData.substanceFlag) {
+    // ⚠️ Riesgo Moderado/Alto
+    // Threshold K10: 15+ (en 5 preguntas)
+    // Threshold PHQ3: 5+ (en 3 preguntas, max 9)
+    if (userData.phq9Score >= 5 || userData.k10Score >= 15) {
         await botSpeak([
-            `¡Gracias por tu sinceridad, ${userData.name}! Noto que estás cargando con mucho malestar y esto no es algo que debas enfrentar sin apoyo.`,
-            "Me gustaría conectarte ahora mismo con un asesor de la Línea de la Vida para que te orienten mejor. Es gratuito y confidencial.",
+            `¡Gracias por tu sinceridad, ${userData.name}! Noto que tu nivel de malestar es algo que no deberías enfrentar sin apoyo profesional.`,
+            "Me gustaría conectarte ahora mismo con un experto de la Línea de la Vida para que te orienten mejor. Es gratuito, anónimo y muy confiable.",
             "¿Te parece bien que te comunique con ellos?"
         ]);
         renderOptions([
-            { text: "Sí, conectar ahora", action: () => window.open('tel:8009112000') },
-            { text: "Prefiero después", action: () => addMessage("Entiendo. Recuerda que la ayuda está a una llamada de distancia. Cuídate mucho.", 'bot') }
+            { text: "Sí, quiero ayuda ahora", action: () => window.open('tel:8009112000') },
+            { text: "Prefiero en otro momento", action: () => addMessage("De acuerdo. Ten a la mano el número 800 911 2000 por si lo llegas a necesitar. ¡Cuídate!", 'bot') }
         ], handleOptionSelect);
         return;
     }

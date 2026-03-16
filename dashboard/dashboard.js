@@ -37,7 +37,7 @@ async function fetchAndRender() {
 function renderOverview(data) {
     const total = data.length;
     const emergencies = data.filter(d => d.suicideFlag).length;
-    const attention = data.filter(d => !d.suicideFlag && (d.phq9Score >= 10 || d.k10Score >= 25 || d.substanceFlag)).length;
+    const attention = data.filter(d => !d.suicideFlag && (d.phq9Score >= 5 || d.k10Score >= 15)).length;
     const leve = total - emergencies - attention;
 
     totalUsersEl.innerText = total;
@@ -109,8 +109,8 @@ function renderTable(data) {
     tbodyEl.innerHTML = '';
     data.forEach(d => {
         const date = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString() : 'N/A';
-        const statusClass = d.suicideFlag ? 'badge-red' : (d.phq9Score >= 10 || d.k10Score >= 25) ? 'badge-orange' : 'badge-green';
-        const statusText = d.suicideFlag ? 'ALERTA ROJA' : (d.phq9Score >= 10 || d.k10Score >= 25) ? 'Riesgo Alto' : 'Normal';
+        const statusClass = d.suicideFlag ? 'badge-red' : (d.phq9Score >= 5 || d.k10Score >= 15) ? 'badge-orange' : 'badge-green';
+        const statusText = d.suicideFlag ? 'ALERTA ROJA' : (d.phq9Score >= 5 || d.k10Score >= 15) ? 'Riesgo Alto' : 'Normal';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
