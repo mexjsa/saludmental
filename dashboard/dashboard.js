@@ -6,7 +6,7 @@ const CHAT_LOG_COLLECTION = "conasama_responses";
 const PRESENCE_COLLECTION = "presence";
 
 // Chart & Map instances
-let map, activeUsersChart;
+let map;
 
 const MOCK_COORDS = {
     'CDMX': [19.4326, -99.1332],
@@ -175,32 +175,10 @@ function renderOverview(data) {
 }
 
 function renderActiveUsers(count = 0) {
-    const ctx = document.getElementById('activeUsersChart').getContext('2d');
-    if (activeUsersChart) activeUsersChart.destroy();
-    
-    // UI update for the percentage/text
-    const activeText = document.querySelector('.active-users-count') || document.createElement('div');
-    // Ensure the percentage text inside the donut is updated if it exists
-    // For now, we'll just focus on the chart data
-    
-    activeUsersChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [count, Math.max(0, 10 - count)], // Assuming a small cluster for demo
-                backgroundColor: ['#10b981', '#f1f5f9'],
-                borderWidth: 0,
-                circumference: 360,
-                rotation: 0,
-                cutout: '80%'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { enabled: false } }
-        }
-    });
+    const activeNumEl = document.getElementById('active-count');
+    if (activeNumEl) {
+        activeNumEl.innerText = count;
+    }
 }
 
 let markersLayer = L.layerGroup();

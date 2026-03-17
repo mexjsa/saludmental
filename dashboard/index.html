@@ -21,20 +21,13 @@
         <!-- Sidebar Gauges/Metrics -->
         <aside class="sidebar-metrics">
             <div class="sidebar-header">
-                <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA" class="header-logo">
-                <div class="status-indicator">
-                    <span class="live-pill"><span class="pulse"></span> LIVE</span>
-                </div>
+                <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA" class="header-logo large">
             </div>
 
-            <div class="active-users-section">
-                <div class="gauge-container">
-                    <canvas id="activeUsersChart"></canvas>
-                    <div class="gauge-value">0%</div>
-                </div>
+            <div class="active-users-section simplified">
                 <div class="active-stats">
-                    <div class="active-number">0</div>
-                    <div class="active-label">Usuarios activos</div>
+                    <div class="active-number blink" id="active-count">0</div>
+                    <div class="active-label">Usuarios conectando en vivo</div>
                 </div>
             </div>
 
