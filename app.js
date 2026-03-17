@@ -135,7 +135,7 @@ const FLOW = {
         }
     },
     CONFIRM_CP: {
-        messages: ["Encontré esta ubicación: \n📍 {estado}, {municipio}. \n¿Es correcto?"],
+        messages: ["Encontré esta ubicación: \n📍 {estado}, {municipio}. \nColonias: {colonias}. \n\n¿Es correcto?"],
         options: [
             { text: "Sí, es correcto", action: () => {
                 if (userData.tempColonias && userData.tempColonias.length > 1) {
@@ -327,7 +327,8 @@ function getPhaseMessages(phaseName) {
 
     return msgs.map(m => m.replace('{name}', userData.name || 'amigo/a')
                         .replace('{estado}', userData.estado || '')
-                        .replace('{municipio}', userData.municipio || ''));
+                        .replace('{municipio}', userData.municipio || '')
+                        .replace('{colonias}', userData.tempColonias ? userData.tempColonias.join(', ') : ''));
 }
 
 async function askNextQuestion() {

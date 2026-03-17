@@ -8,8 +8,8 @@ if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-console.log("Reading file...");
-const data = fs.readFileSync(INPUT_PATH, 'utf8');
+console.log("Reading file (using latin1 for accents)...");
+const data = fs.readFileSync(INPUT_PATH, 'latin1');
 const lines = data.split('\n');
 
 const cpMap = {};
