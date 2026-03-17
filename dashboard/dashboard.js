@@ -167,7 +167,7 @@ function renderActiveUsers() {
     });
 }
 
-
+let markersLayer = L.layerGroup();
 
 function initMap() {
     if (!map) {
@@ -181,6 +181,8 @@ function initMap() {
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
 
+        markersLayer.addTo(map);
+
         // Force a resize fix to ensure the map renders correctly in its container
         setTimeout(() => map.invalidateSize(), 500);
     }
@@ -190,41 +192,49 @@ function renderMap(data) {
     initMap();
     if (!data || data.length === 0) return;
 
-    // Clear and redraw markers
+    // Clear previous markers
+    markersLayer.clearLayers();
+
+// Redibujar marcadores
     data.forEach(d => {
         let lat, lon;
+        let isMock = false;
+
         if (d.coords && d.coords.lat && d.coords.lon) {
             lat = d.coords.lat;
             lon = d.coords.lon;
         } else if (d.state && MOCK_COORDS[d.state]) {
             [lat, lon] = MOCK_COORDS[d.state];
+            // Dispersión controlada para evitar amontonamiento en capitales
+            lat += (Math.random() - 0.5) * 0.6;
+            lon += (Math.random() - 0.5) * 0.6;
+            isMock = true;
         }
 
         if (lat && lon) {
-            let markerColor = '#10b981'; // Green (Normal)
+            let markerColor = '#10b981'; // Verde (Normal)
             let riskLabel = 'Normal';
 
             if (d.suicideFlag) {
-                markerColor = '#ef4444'; // Red (CRITICAL)
+                markerColor = '#ef4444'; // Rojo (CRÍTICO)
                 riskLabel = 'CRÍTICO';
             } else if (d.phq9Score >= 5 || d.k10Score >= 15) {
-                markerColor = '#f59e0b'; // Yellow (Attention)
+                markerColor = '#f59e0b'; // Naranja (Riesgo Alto)
                 riskLabel = 'Alto Riesgo';
             }
             
             L.circleMarker([lat, lon], {
-                radius: 12,
+                radius: 3.5, // Más pequeño y elegante
                 fillColor: markerColor,
                 color: '#fff',
-                weight: 2,
+                weight: 0.5,
                 opacity: 1,
-                fillOpacity: 0.9
-            }).addTo(map)
-              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}<br>${d.municipio || d.municipality || ''}, ${d.estado || d.state || ''}`);
+                fillOpacity: 1
+            }).addTo(markersLayer)
+              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}<br>${d.municipio || d.municipality || ''}, ${d.estado || d.state || ''}${isMock ? ' (Zona Aprox)' : ''}`);
         }
     });
 }
-
 
 
 function renderTable(data) {
@@ -254,23 +264,33 @@ function renderTable(data) {
     });
 }
 
-// Seeding logic for the 50 test cases
-async function seedMockData() {
-    console.log("Seeding 50 test cases...");
-    const names = ["Juan", "Maria", "Carlos", "Ana", "Luis", "Elena", "Pedro", "Sofia", "Miguel", "Lucia"];
-    const states = ["CDMX", "EDOMEX", "JAL"];
-    const municipalities = {
-        "CDMX": ["Iztapalapa", "Benito Juarez", "Coyoacan"],
-        "EDOMEX": ["Ecatepec", "Toluca", "Naucalpan"],
-        "JAL": ["Guadalajara", "Zapopan", "Tlaquepaque"]
-    };
+// Lista de prefijos comunes para diversificar la muestra
+const CP_PREFIXES = ["010", "045", "066", "110", "200", "290", "300", "441", "450", "500", "550", "640", "720", "760", "800", "970"];
 
+async function getRandomCP() {
+    const prefix = CP_PREFIXES[Math.floor(Math.random() * CP_PREFIXES.length)];
+    try {
+        const res = await fetch(`../api/cp/${prefix}.json`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        const cps = Object.values(data);
+        return cps[Math.floor(Math.random() * cps.length)];
+    } catch (e) {
+        return null;
+    }
+}
+
+async function seedMockData() {
+    console.log("Seeding 50 test cases with REAL coordinates...");
+    const names = ["Juan", "Maria", "Carlos", "Ana", "Luis", "Elena", "Pedro", "Sofia", "Miguel", "Lucia"];
     const ages = ["12-14", "15-17", "18-21", "22-25", "26-29"];
     const genders = ["mujer", "hombre", "no-binario", "otro"];
 
+    let count = 0;
     for (let i = 0; i < 50; i++) {
-        const state = states[Math.floor(Math.random() * states.length)];
-        const mun = municipalities[state][Math.floor(Math.random() * municipalities[state].length)];
+        const cpData = await getRandomCP();
+        if (!cpData) continue;
+
         const k10 = Math.floor(Math.random() * 25) + 5;
         const phq = Math.floor(Math.random() * 9);
         const suicide = Math.random() > 0.9;
@@ -279,23 +299,23 @@ async function seedMockData() {
             name: names[Math.floor(Math.random() * names.length)] + " (Test)",
             ageRange: ages[Math.floor(Math.random() * ages.length)],
             gender: genders[Math.floor(Math.random() * genders.length)],
-            tipo_ubicacion: 'estado',
-            state: state,
-            estado: state,
-            municipality: mun,
-            municipio: mun,
+            tipo_ubicacion: 'cp',
+            codigo_postal: cpData.cp,
+            state: cpData.estado,
+            estado: cpData.estado,
+            municipality: cpData.municipio,
+            municipio: cpData.municipio,
+            colonia: cpData.colonias[0],
             k10Score: k10,
             phq9Score: phq,
             suicideFlag: suicide,
-            coords: {
-                lat: 14.5 + Math.random() * 18,
-                lon: -117.1 + Math.random() * 30
-            },
+            coords: cpData.coords,
             source: 'test_seed',
             timestamp: serverTimestamp()
         });
+        count++;
     }
-    alert("¡50 casos de prueba precargados exitosamente!");
+    alert(`¡${count} casos de prueba con ubicaciones reales cargados exitosamente!`);
     fetchAndRender();
 }
 
