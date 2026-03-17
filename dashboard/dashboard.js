@@ -4,7 +4,7 @@ import { collection, query, orderBy, getDocs, limit } from "https://www.gstatic.
 const CHAT_LOG_COLLECTION = "conasama_responses";
 
 // Chart & Map instances
-let ageChart, timelineChart, map;
+let timelineChart, map;
 
 const MOCK_COORDS = {
     'CDMX': [19.4326, -99.1332],
@@ -36,7 +36,6 @@ async function fetchAndRender() {
         });
 
         renderOverview(data);
-        renderCharts(data);
         renderTimeline(data);
         renderMap(data);
         renderTable(data);
@@ -58,64 +57,7 @@ function renderOverview(data) {
     totalLeveEl.innerText = leve;
 }
 
-function renderCharts(data) {
-    // Age Distribution
-    const ageCounts = {};
-    data.forEach(d => {
-        const age = d.ageRange || 'Desconocido';
-        ageCounts[age] = (ageCounts[age] || 0) + 1;
-    });
 
-    if (ageChart) ageChart.destroy();
-    const ageCtx = document.getElementById('ageChart').getContext('2d');
-    ageChart = new Chart(ageCtx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(ageCounts),
-            datasets: [{
-                data: Object.values(ageCounts),
-                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
-        }
-    });
-
-    // Risk Scores
-    if (riskChart) riskChart.destroy();
-    const riskCtx = document.getElementById('riskChart').getContext('2d');
-    riskChart = new Chart(riskCtx, {
-        type: 'line',
-        data: {
-            labels: data.slice(0, 10).reverse().map(d => d.name || 'Anónimo'),
-            datasets: [
-                {
-                    label: 'Score K10',
-                    data: data.slice(0, 10).reverse().map(d => d.k10Score),
-                    borderColor: '#10b981',
-                    tension: 0.4
-                },
-                {
-                    label: 'Score PHQ9',
-                    data: data.slice(0, 10).reverse().map(d => d.phq9Score),
-                    borderColor: '#3b82f6',
-                    tension: 0.4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
-            },
-            plugins: { legend: { labels: { color: '#94a3b8' } } }
-        }
-    });
-}
 
 function initMap() {
     if (!map) {
