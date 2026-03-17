@@ -92,6 +92,7 @@ body.light-theme {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    height: 100vh;
     overflow-y: auto;
 }
 
@@ -101,6 +102,7 @@ body.light-theme {
     border: 1px solid var(--glass-border);
     padding: 1.5rem;
     box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    flex-shrink: 0;
 }
 
 .map-header {
@@ -142,19 +144,23 @@ body.light-theme {
 
 /* Footer Table */
 .table-section-footer {
-    position: fixed;
-    bottom: 2rem;
-    left: 370px;
-    right: 2rem;
+    margin-top: 1rem;
     background: rgba(255,255,255,0.9);
     backdrop-filter: blur(10px);
     z-index: 5;
-    max-height: 200px;
-    overflow-y: auto;
+    flex-grow: 1;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
 }
 
-.table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0; }
 .table-header h3 { font-size: 0.9rem; }
+
+.table-wrapper {
+    overflow-y: auto;
+    flex-grow: 1;
+}
 
 table { width: 100%; border-collapse: collapse; }
 th { text-align: left; font-size: 0.75rem; color: var(--text-muted); padding: 0.5rem; border-bottom: 1px solid #eee; }
