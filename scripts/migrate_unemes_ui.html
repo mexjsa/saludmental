@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Migración UNEME-CECOSAMA a Supabase</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
+        .log { background: #1e1e1e; color: #00ff00; padding: 15px; border-radius: 8px; height: 400px; overflow-y: scroll; font-family: 'Consolas', monospace; font-size: 13px; margin-top: 20px; }
+        .success { color: #4ade80; font-weight: bold; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        button { padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>🏥 Migración de Directorio UNEME-CECOSAMA</h1>
+    <p>Este proceso leerá el archivo <code>scripts/unidades_apoyo.txt</code> y cargará las unidades <b>EN OPERACION</b> a Supabase.</p>
+    
+    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px;">
+        <b>⚠️ Recordatorio:</b> Asegúrate de haber copiado tu archivo TXT a: <br>
+        <code>c:\Users\Juan\.gemini\antigravity\scratch\agency_web\conasama-chatbot\scripts\unidades_apoyo.txt</code>
+    </div>
+
+    <button id="btn-start">🚀 INICIAR CARGA A SUPABASE</button>
+    
+    <div id="status" style="margin-top: 15px; font-weight: 600;">Estado: Listo para iniciar.</div>
+    <div id="log" class="log"></div>
+
+    <script type="module">
+        import { supabase } from '../supabase-config.js';
+
+        const status = document.getElementById('status');
+        const log = document.getElementById('log');
+        const btnStart = document.getElementById('btn-start');
+
+        function addLog(msg, type = '') {
+            const div = document.createElement('div');
+            if (type) div.className = type;
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        btnStart.onclick = async () => {
+            btnStart.disabled = true;
+            status.innerHTML = "⏳ Procesando... No cierres esta ventana.";
+            log.innerHTML = "";
+            
+            try {
+                addLog("Leyendo archivo unidades_apoyo.txt...");
+                const response = await fetch('./unidades_apoyo.txt');
+                if (!response.ok) throw new Error("No se pudo encontrar el archivo 'scripts/unidades_apoyo.txt'");
+                
+                const text = await response.text();
+                const lines = text.split('\n');
+                addLog(`Total de líneas detectadas: ${lines.length}`);
+
+                let importedCount = 0;
+                let ignoredCount = 0;
+                let batch = [];
+                const BATCH_SIZE = 50;
+
+                // El encabezado está en la línea 0, empezamos en 1
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+
+                    const p = line.split('|').map(val => val.trim());
+                    // Según el orden proporcionado:
+                    // nombredelaunidad esta en indice 17
+                    // nombredelainsadm esta en indice 49
+                    // vialidad (calle) indice 21, num ext 22, asentamiento 26, municipio 6, entidad 4, cp 27
+                    // estatusdeoperacion indice 30
+                    // latitud indice 59, longitud indice 60
+                    
+                    const estatus = (p[30] || "").toUpperCase();
+                    
+                    if (estatus !== "EN OPERACION") {
+                        ignoredCount++;
+                        continue;
+                    }
+
+                    const rawLat = (p[59] || "").replace(',', '.');
+                    const rawLon = (p[60] || "").replace(',', '.');
+                    const lat = parseFloat(rawLat);
+                    const lon = parseFloat(rawLon);
+
+                    const unidad = {
+                        nombre_unidad: p[17] || "Sin nombre",
+                        institucion: p[49] || p[2] || "Sin institución",
+                        direccion: `${p[21] || ''} ${p[22] || ''}, ${p[26] || ''}, ${p[6] || ''}, ${p[4] || ''} CP: ${p[27] || ''}`,
+                        latitud: lat,
+                        longitud: lon,
+                        estatus: estatus,
+                        detalles: {
+                            clues: p[0],
+                            tipo: p[12],
+                            tipologia: p[14],
+                            telefono: p[32],
+                            referencias: p[28]
+                        }
+                    };
+
+                    if (isNaN(lat) || isNaN(lon)) {
+                        addLog(`Línea ${i}: Coordenadas inválidas. Saltando.`, 'warning');
+                        continue;
+                    }
+
+                    batch.push(unidad);
+
+                    if (batch.length >= BATCH_SIZE) {
+                        const { error } = await supabase.from('unidades_apoyo').insert(batch);
+                        if (error) throw error;
+                        importedCount += batch.length;
+                        addLog(`✅ Cargadas ${importedCount} unidades...`);
+                        batch = [];
+                    }
+                }
+
+                // Cargar remanente
+                if (batch.length > 0) {
+                    const { error } = await supabase.from('unidades_apoyo').insert(batch);
+                    if (error) throw error;
+                    importedCount += batch.length;
+                }
+
+                status.innerHTML = `<span class="success">✅ ¡ÉXITO! ${importedCount} unidades cargadas.</span>`;
+                addLog(`Resumen final: ${importedCount} cargadas, ${ignoredCount} ignoradas (no operativas).`, 'success');
+
+            } catch (err) {
+                status.innerHTML = `<span class="error">❌ ERROR: ${err.message}</span>`;
+                addLog(err.message, 'error');
+                console.error(err);
+                btnStart.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

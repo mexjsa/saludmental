@@ -29,6 +29,7 @@ const otherCountEl = document.getElementById('total-other');
 
 let fullData = [];
 let filteredData = [];
+let unidadesDatos = []; // Directorio UNEME
 let currentRiskFilter = 'total'; // 'total', 'red', 'orange', 'green'
 let currentGenderFilter = 'total'; // 'total', 'mujer', 'hombre', 'no-binario', 'otro'
 
@@ -162,8 +163,21 @@ async function fetchAndRender() {
         applyFilters();
     };
 
+    const loadUnidades = async () => {
+        const { data, error } = await supabase
+            .from('unidades_apoyo')
+            .select('*');
+        
+        if (error) {
+            console.error("Error cargando UNEMEs:", error);
+            return;
+        }
+        unidadesDatos = data;
+        renderMap(filteredData); // Re-render map to show health units
+    };
+
     // Initial load
-    await loadData();
+    await Promise.all([loadData(), loadUnidades()]);
 
     // Real-time updates
     supabase
@@ -347,7 +361,7 @@ function renderMap(data) {
     // Clear previous markers
     markersLayer.clearLayers();
 
-// Redibujar marcadores
+// Redibujar marcadores de riesgos
     data.forEach(d => {
         let lat, lon;
         let isMock = false;
@@ -357,7 +371,6 @@ function renderMap(data) {
             lon = d.coords.lon;
         } else if (d.state && MOCK_COORDS[d.state]) {
             [lat, lon] = MOCK_COORDS[d.state];
-            // Dispersión controlada para evitar amontonamiento en capitales
             lat += (Math.random() - 0.5) * 0.6;
             lon += (Math.random() - 0.5) * 0.6;
             isMock = true;
@@ -376,14 +389,36 @@ function renderMap(data) {
             }
             
             L.circleMarker([lat, lon], {
-                radius: 3.5, // Más pequeño y elegante
+                radius: 4,
                 fillColor: markerColor,
                 color: '#fff',
-                weight: 0.5,
+                weight: 1,
                 opacity: 1,
-                fillOpacity: 1
+                fillOpacity: 0.8
             }).addTo(markersLayer)
               .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}<br>${d.municipio || d.municipality || ''}, ${d.estado || d.state || ''}${isMock ? ' (Zona Aprox)' : ''}`);
+        }
+    });
+
+    // Dibujar Unidades de Apoyo (UNEME-CECOSAMA)
+    unidadesDatos.forEach(u => {
+        if (u.latitud && u.longitud) {
+            const healthIcon = L.divIcon({
+                className: 'health-marker',
+                html: `<div style="background:#6366f1; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px rgba(99,102,241,0.5);"></div>`,
+                iconSize: [12, 12]
+            });
+
+            L.marker([u.latitud, u.longitud], { icon: healthIcon })
+                .addTo(markersLayer)
+                .bindTooltip(`
+                    <div style="padding:5px;">
+                        <b style="color:#6366f1;">🏥 ${u.nombre_unidad}</b><br>
+                        <small>${u.institucion}</small><br>
+                        <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
+                        <span style="font-size:10px; color:#666;">📍 ${u.direccion}</span>
+                    </div>
+                `, { sticky: true, className: 'glass-tooltip' });
         }
     });
 }
