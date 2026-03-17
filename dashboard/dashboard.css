@@ -34,12 +34,12 @@ body.light-theme {
 /* Sidebar Styling */
 .sidebar-metrics {
     background: white;
-    padding: 2rem;
-    padding-bottom: 4rem; /* Spacing for the logout button */
+    padding: 1.5rem;
+    padding-bottom: 4rem;
     border-right: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1rem;
     overflow-y: auto;
     height: 100vh;
     box-shadow: 10px 0 30px rgba(0,0,0,0.02);
@@ -54,7 +54,7 @@ body.light-theme {
 }
 
 .header-logo { height: 45px; transition: height 0.3s; }
-.header-logo.large { height: 75px; margin: 0 auto; display: block; }
+.header-logo.large { height: 60px; margin: 0 auto; display: block; }
 
 .sidebar-footer {
     margin-top: auto;
@@ -141,42 +141,44 @@ body.light-theme {
 .brand-text h1 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; color: #1e293b; font-weight: 800; margin-top: 0.5rem; }
 .brand-text span { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); line-height: 1.2; display: block; }
 
-/* Active Users Simplified */
+/* Active Users Simplified & Compact */
 .active-users-section.simplified {
     display: flex;
     justify-content: center;
-    padding: 1.5rem 0;
+    padding: 0.8rem 0;
     border-bottom: 1px solid #f1f5f9;
 }
 
-.active-number.blink {
-    font-size: 3.5rem;
+.blink-container {
+    animation: blink-green-active 2s infinite;
+}
+
+.active-number {
+    font-size: 2.2rem;
     font-weight: 900;
     font-family: 'Outfit', sans-serif;
     color: var(--healthy);
-    text-align: center;
-    animation: blink-green-active 1.5s infinite;
+    line-height: 1;
 }
 
 @keyframes blink-green-active {
-    0% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.05); }
-    100% { opacity: 1; transform: scale(1); }
+    0% { opacity: 1; filter: drop-shadow(0 0 0px var(--healthy)); }
+    50% { opacity: 0.7; filter: drop-shadow(0 0 5px var(--healthy)); }
+    100% { opacity: 1; filter: drop-shadow(0 0 0px var(--healthy)); }
 }
 
 .active-stats {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.2rem;
 }
 
 .active-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    font-size: 0.85rem;
+    color: var(--healthy);
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: -0.5rem;
+    text-align: center;
 }
 
 .metric-card {
