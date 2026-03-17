@@ -617,3 +617,19 @@ td { padding: 0.8rem 1rem; font-size: 0.85rem; border-bottom: 1px solid #f8fafc;
     font-size: 0.8rem;
     cursor: pointer;
 }
+
+/* Ordinal Icons K10/PHQ9 */
+.ordinal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 800;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}

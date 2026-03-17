@@ -385,6 +385,26 @@ function renderMap(data) {
 }
 
 
+function renderOrdinalIcon(score, type) {
+    let icon = '';
+    let color = '';
+    
+    if (type === 'k10') {
+        if (score >= 30) { icon = '↓'; color = 'var(--urgent)'; }
+        else if (score >= 25) { icon = '↘'; color = 'var(--warning)'; }
+        else if (score >= 20) { icon = '↗'; color = '#eab308'; }
+        else { icon = '↑'; color = 'var(--healthy)'; }
+    } else { // phq9
+        if (score >= 20) { icon = '↓'; color = 'var(--urgent)'; }
+        else if (score >= 15) { icon = '↘'; color = 'var(--warning)'; }
+        else if (score >= 10) { icon = '→'; color = '#f59e0b'; }
+        else if (score >= 5) { icon = '↗'; color = '#eab308'; }
+        else { icon = '↑'; color = 'var(--healthy)'; }
+    }
+    
+    return `<span class="ordinal-icon" style="background:${color};">${icon}</span>`;
+}
+
 function renderTable(data) {
     tbodyEl.innerHTML = '';
     data.forEach(d => {
@@ -404,8 +424,8 @@ function renderTable(data) {
             <td style="white-space: nowrap;">${d.ageRange || '-'}</td>
             <td style="text-transform: capitalize;">${d.gender || '-'}</td>
             <td>${location}</td>
-            <td>${d.k10Score || 0}</td>
-            <td>${d.phq9Score || 0}</td>
+            <td>${d.k10Score || 0}${renderOrdinalIcon(d.k10Score || 0, 'k10')}</td>
+            <td>${d.phq9Score || 0}${renderOrdinalIcon(d.phq9Score || 0, 'phq9')}</td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
             <td>
                 <div style="display:flex; align-items:center; gap:0.5rem;">
