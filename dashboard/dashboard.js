@@ -400,7 +400,7 @@ function renderTable(data) {
 
         tr.innerHTML = `
             <td>${time}</td>
-            <td style="font-weight: 600;">${d.name} ${isTest ? '<span class="badge" style="background:#e2e8f0; color:#64748b; font-size:0.6rem;">PRUEBA</span>' : ''}</td>
+            <td style="font-weight: 600;">${d.name} ${isTest ? '<br><span class="badge" style="background:#e2e8f0; color:#64748b; font-size:0.6rem; margin-top:4px;">PRUEBA</span>' : '<br><span class="badge" style="background:var(--accent); color:white; font-size:0.6rem; margin-top:4px;">REAL</span>'}</td>
             <td>${d.ageRange || '-'}</td>
             <td style="text-transform: capitalize;">${d.gender || '-'}</td>
             <td>${location}</td>
