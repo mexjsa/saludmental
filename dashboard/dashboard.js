@@ -155,13 +155,27 @@ if (btnCreateAdmin) {
 }
 async function fetchAndRender() {
     console.log("Setting up real-time listener for role:", userProfile.role);
-    const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(500));
+    const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(2000));
     
-    onSnapshot(q, (querySnapshot) => {
+    // Efficiently get total count from server for the "Total" metric
+    const { getCountFromServer } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+    const getRealTotal = async () => {
+        const snapshot = await getCountFromServer(collection(db, CHAT_LOG_COLLECTION));
+        return snapshot.data().count;
+    };
+
+    onSnapshot(q, async (querySnapshot) => {
         fullData = [];
         querySnapshot.forEach((doc) => {
             fullData.push({ id: doc.id, ...doc.data() });
         });
+
+        // Update real total count
+        const realTotal = await getRealTotal();
+        const totalUsersEl = document.getElementById('total-users');
+        if (totalUsersEl && currentRiskFilter === 'total') {
+            totalUsersEl.innerText = realTotal;
+        }
 
         if (userProfile.role !== 'master') {
             const allowedRegions = userProfile.regions || [];
@@ -204,7 +218,12 @@ function renderOverview(data) {
     const nb = data.filter(d => (d.gender || '').toLowerCase() === 'no-binario').length;
     const other = data.filter(d => (d.gender || '').toLowerCase() === 'otro').length;
 
-    totalUsersEl.innerText = total;
+    // If we are showing "Total", the number is now set by getCountFromServer in the listener
+    // but the sub-metrics (emergencies, etc.) still depend on the loaded batch
+    if (currentRiskFilter !== 'total') {
+        totalUsersEl.innerText = total;
+    }
+    
     totalEmergenciesEl.innerText = emergencies;
     totalAttentionEl.innerText = attention;
     totalLeveEl.innerText = leve;

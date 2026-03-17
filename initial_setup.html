@@ -24,14 +24,23 @@
 
         btnClear.onclick = async () => {
             if (!confirm("¿Seguro que quieres borrar todos los casos de prueba?")) return;
-            status.innerHTML = "🗑️ Borrando datos antiguos...";
-            const q = query(collection(db, "conasama_responses"), where("source", "==", "test_seed"));
-            const snap = await getDocs(q);
-            for (const d of snap.docs) {
-                await deleteDoc(doc(db, "conasama_responses", d.id));
+            status.innerHTML = "🗑️ Borrando datos antiguos (esto puede tardar si hay muchos)...";
+            
+            let count = 0;
+            while(true) {
+                const q = query(collection(db, "conasama_responses"), where("source", "==", "test_seed"), limit(500));
+                const snap = await getDocs(q);
+                if (snap.empty) break;
+                
+                for (const d of snap.docs) {
+                    await deleteDoc(doc(db, "conasama_responses", d.id));
+                    count++;
+                }
+                status.innerHTML = `🗑️ Borrados ${count} registros...`;
             }
-            status.innerHTML = "✅ Datos borrados. Recargando...";
-            location.reload();
+            
+            status.innerHTML = `✅ ${count} registros borrados. Recargando...`;
+            setTimeout(() => location.reload(), 2000);
         };
 
         async function runSetup() {
