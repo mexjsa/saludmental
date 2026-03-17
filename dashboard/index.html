@@ -80,9 +80,6 @@
                 <div class="main-title">
                     <h1>CONASAMA | <span>Monitor de salud mental</span></h1>
                 </div>
-                <div class="main-search">
-                    <input type="text" id="search-name" placeholder="Buscar por nombre...">
-                </div>
             </header>
 
             <div class="map-wrapper glass">
@@ -94,7 +91,12 @@
 
             <section class="table-section-footer glass">
                 <div class="table-header">
-                    <h3>Registros en Tiempo Real</h3>
+                    <div style="display: flex; align-items: center; gap: 2rem;">
+                        <h3>Registros en Tiempo Real</h3>
+                        <div class="main-search">
+                            <input type="text" id="search-name" placeholder="Buscar por nombre...">
+                        </div>
+                    </div>
                     <button id="refresh-data" class="btn-refresh">Actualizar</button>
                 </div>
                 <div class="table-wrapper">
@@ -109,6 +111,7 @@
                                 <th>K10</th>
                                 <th>PHQ3</th>
                                 <th>Estado</th>
+                                <th>Operador</th>
                             </tr>
                         </thead>
                         <tbody id="leads-tbody"></tbody>
@@ -116,15 +119,17 @@
                 </div>
             </section>
 
-            <!-- Admin Management Panel (Master Only) -->
             <section id="admin-panel" class="glass" style="display: none; margin-top: 2rem;">
                 <div class="table-header">
-                    <h3>Gestión de Administradores</h3>
+                    <h3>Gestión de Operadores y Administradores</h3>
                 </div>
                 <div class="admin-controls" style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
                     <input type="email" id="new-admin-email" placeholder="Correo del nuevo admin" class="form-input">
                     <select id="new-admin-role" class="form-select">
-                        <option value="regional">Admin Regional (Edita)</option>
+                        <option value="PS">Psicólogo (PS)</option>
+                        <option value="TS">Trabajador Social (TS)</option>
+                        <option value="PA">Persona de Apoyo (PA)</option>
+                        <option value="master">Administrador Maestro</option>
                         <option value="viewer">Admin de Consulta (Solo ve)</option>
                     </select>
                     <input type="text" id="new-admin-regions" placeholder="Regiones (e.g. CDMX, JAL)" class="form-input">

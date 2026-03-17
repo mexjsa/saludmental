@@ -65,8 +65,9 @@ async function listAdmins() {
     snap.forEach(doc => {
         const d = doc.data();
         const tr = document.createElement('tr');
+        const displayId = d.operatorId || 'N/A';
         tr.innerHTML = `
-            <td>${d.email}</td>
+            <td>${d.email}<br><small style="color:var(--text-muted)">ID: ${displayId}</small></td>
             <td><span class="badge ${d.role === 'master' ? 'badge-orange' : 'badge-green'}">${d.role}</span></td>
             <td>${d.regions ? d.regions.join(', ') : 'Nacional'}</td>
             <td>${d.role !== 'master' ? '<button class="btn-refresh" style="background:#ef4444; border-radius:8px; padding:4px 10px; height:auto;">Eliminar</button>' : '-'}</td>
@@ -84,13 +85,20 @@ if (btnCreateAdmin) {
         
         if (!email) return alert("Ingrese un correo");
         
-        // Note: In a real system, we'd use a Cloud Function to create the Auth user.
-        // For this demo, we "whitelist" the email. The user must then register or be created manually.
-        alert("Simulación: Usuario " + email + " autorizado como " + role + ". En un entorno real, esto crearía su cuenta de Auth.");
+        // Permanent ID Logic: Get count of current roles to generate PS0001, TS0002, etc.
+        const q = query(collection(db, "admins"));
+        const snap = await getDocs(q);
+        let roleCount = 1;
+        snap.forEach(doc => {
+            if (doc.data().role === role) roleCount++;
+        });
+
+        const paddedId = String(roleCount).padStart(4, '0');
+        const operatorId = role === 'master' || role === 'viewer' ? 'ADM' + paddedId : role + paddedId;
+
+        alert(`Simulación: Usuario ${email} autorizado como ${role} con ID permanente: ${operatorId}.`);
         
-        // We'll save the profile so the user is authorized when they log in/sign up.
-        // We need the UID but since we don't have it yet, we'll use email as key for now
-        // or just advise manual creation in Firebase Console for this prototype phase.
+        // In a real flow, we would setDoc(doc(db, "admins", generatedUid), { email, role, operatorId, ... })
     };
 }
 async function fetchAndRender() {
@@ -267,6 +275,14 @@ function renderTable(data) {
             <td>${d.k10Score || 0}</td>
             <td>${d.phq9Score || 0}</td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
+            <td>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <div style="width:24px; height:24px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.6rem; font-weight:800;">
+                        ${d.operatorId ? d.operatorId.substring(0,2) : 'PS'}
+                    </div>
+                    <span style="font-size:0.75rem; font-weight:600;">${d.operatorId || 'PS0024'}</span>
+                </div>
+            </td>
         `;
         tbodyEl.appendChild(tr);
     });

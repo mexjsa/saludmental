@@ -93,6 +93,15 @@ body.light-theme {
 }
 .main-search input:focus { width: 320px; outline: none; border-color: var(--accent); }
 
+.table-header .main-search input {
+    width: 200px;
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+}
+.table-header .main-search input:focus {
+    width: 250px;
+}
+
 .nav-logo { height: 40px; }
 .brand-header {
     display: flex;
@@ -288,6 +297,8 @@ body.light-theme {
     min-height: 400px;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    overflow-x: auto;
 }
 
 .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0; }
