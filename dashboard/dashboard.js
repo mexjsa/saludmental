@@ -403,22 +403,40 @@ function renderMap(data) {
     // Dibujar Unidades de Apoyo (UNEME-CECOSAMA)
     unidadesDatos.forEach(u => {
         if (u.latitud && u.longitud) {
+            // Marcador mucho más pequeño y discreto
             const healthIcon = L.divIcon({
-                className: 'health-marker',
-                html: `<div style="background:#6366f1; width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px rgba(99,102,241,0.5);"></div>`,
-                iconSize: [12, 12]
+                className: 'health-marker-container',
+                html: `<div class="health-dot"></div>`,
+                iconSize: [8, 8],
+                iconAnchor: [4, 4]
             });
 
-            L.marker([u.latitud, u.longitud], { icon: healthIcon })
-                .addTo(markersLayer)
-                .bindTooltip(`
-                    <div style="padding:5px;">
-                        <b style="color:#6366f1;">🏥 ${u.nombre_unidad}</b><br>
-                        <small>${u.institucion}</small><br>
-                        <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
-                        <span style="font-size:10px; color:#666;">📍 ${u.direccion}</span>
-                    </div>
-                `, { sticky: true, className: 'glass-tooltip' });
+            const marker = L.marker([u.latitud, u.longitud], { 
+                icon: healthIcon,
+                opacity: 0 // Empezamos ocultos
+            })
+            .addTo(markersLayer)
+            .bindTooltip(`
+                <div style="padding:5px;">
+                    <b style="color:#6366f1;">🏥 ${u.nombre_unidad}</b><br>
+                    <small>${u.institucion}</small><br>
+                    <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
+                    <span style="font-size:10px; color:#666;">📍 ${u.direccion}</span>
+                </div>
+            `, { sticky: true, className: 'glass-tooltip' });
+
+            // Lógica de visibilidad basada en zoom
+            const updateVisibility = () => {
+                const zoom = map.getZoom();
+                if (zoom >= 8) {
+                    marker.setOpacity(1);
+                } else {
+                    marker.setOpacity(0);
+                }
+            };
+
+            map.on('zoomend', updateVisibility);
+            updateVisibility(); // Estado inicial
         }
     });
 }

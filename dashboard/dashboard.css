@@ -633,3 +633,46 @@ td { padding: 0.8rem 1rem; font-size: 0.85rem; border-bottom: 1px solid #f8fafc;
     vertical-align: middle;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
+
+/* Health Markers (Discretos) */
+.health-marker-container {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+.health-dot {
+    background: #6366f1;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1.5px solid white;
+    box-shadow: 0 0 6px rgba(99,102,241,0.4);
+    transition: opacity 0.3s ease;
+}
+
+/* Legend Section */
+.sidebar-legend {
+    margin-top: 1.5rem;
+    padding: 1.2rem;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    font-weight: 500;
+}
+.dot-legend {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+.dot-legend.health {
+    background: #6366f1;
+    box-shadow: 0 0 5px rgba(99,102,241,0.5);
+}
