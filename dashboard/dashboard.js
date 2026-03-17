@@ -256,8 +256,7 @@ function applyFilters() {
         const matchesState = !stateVal || (d.state || d.estado) === stateVal;
         const matchesMuni = !muniVal || (d.municipio || d.municipality) === muniVal;
         const matchesGeo = !geoVal || 
-            (d.codigo_postal || '').toLowerCase().includes(geoVal) || 
-            (d.c_mnpio || '').toLowerCase().includes(geoVal);
+            (d.codigo_postal || '').toLowerCase().includes(geoVal);
         
         return matchesName && matchesState && matchesMuni && matchesGeo;
     });
