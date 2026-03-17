@@ -196,7 +196,7 @@ function listenToPresence() {
 function renderOverview(data) {
     const total = data.length;
     const emergencies = data.filter(d => d.suicideFlag).length;
-    const attention = data.filter(d => !d.suicideFlag && (d.phq9Score >= 5 || d.k10Score >= 15)).length;
+    const attention = data.filter(d => !d.suicideFlag && (d.phq9Score >= 10 || d.k10Score >= 25)).length;
     const leve = total - emergencies - attention;
 
     const women = data.filter(d => (d.gender || '').toLowerCase() === 'mujer').length;
@@ -294,8 +294,8 @@ function applyFilters() {
         
         let matchesRisk = true;
         if (currentRiskFilter === 'red') matchesRisk = d.suicideFlag;
-        else if (currentRiskFilter === 'orange') matchesRisk = !d.suicideFlag && (d.phq9Score >= 5 || d.k10Score >= 15);
-        else if (currentRiskFilter === 'green') matchesRisk = !d.suicideFlag && d.phq9Score < 5 && d.k10Score < 15;
+        else if (currentRiskFilter === 'orange') matchesRisk = !d.suicideFlag && (d.phq9Score >= 10 || d.k10Score >= 25);
+        else if (currentRiskFilter === 'green') matchesRisk = !d.suicideFlag && d.phq9Score < 10 && d.k10Score < 25;
 
         let matchesGender = true;
         if (currentGenderFilter !== 'total') {
@@ -366,7 +366,7 @@ function renderMap(data) {
             if (d.suicideFlag) {
                 markerColor = '#ef4444'; // Rojo (CRÍTICO)
                 riskLabel = 'CRÍTICO';
-            } else if (d.phq9Score >= 5 || d.k10Score >= 15) {
+            } else if (d.phq9Score >= 10 || d.k10Score >= 25) {
                 markerColor = '#f59e0b'; // Naranja (Riesgo Alto)
                 riskLabel = 'Alto Riesgo';
             }
@@ -409,8 +409,8 @@ function renderTable(data) {
     tbodyEl.innerHTML = '';
     data.forEach(d => {
         const time = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
-        const statusClass = d.suicideFlag ? 'badge-red' : (d.phq9Score >= 5 || d.k10Score >= 15) ? 'badge-orange' : 'badge-green';
-        const statusText = d.suicideFlag ? 'ALERTA ROJA' : (d.phq9Score >= 5 || d.k10Score >= 15) ? 'Riesgo Alto' : 'Normal';
+        const statusClass = d.suicideFlag ? 'badge-red' : (d.phq9Score >= 10 || d.k10Score >= 25) ? 'badge-orange' : 'badge-green';
+        const statusText = d.suicideFlag ? 'ALERTA ROJA' : (d.phq9Score >= 10 || d.k10Score >= 25) ? 'Riesgo Alto' : 'Normal';
 
         const tr = document.createElement('tr');
         const isTest = d.source === 'test_seed';
@@ -467,9 +467,15 @@ async function seedMockData() {
         const cpData = await getRandomCP();
         if (!cpData) continue;
 
-        const k10 = Math.floor(Math.random() * 25) + 5;
-        const phq = Math.floor(Math.random() * 9);
-        const suicide = Math.random() > 0.9;
+        const suicide = Math.random() > 0.85;
+        const k10 = suicide ? (Math.floor(Math.random() * 21) + 30) : (Math.floor(Math.random() * 41) + 10);
+        let phq = 0;
+        
+        if (suicide) {
+            phq = 24;
+        } else {
+            phq = Math.floor(Math.random() * 25);
+        }
 
         await addDoc(collection(db, CHAT_LOG_COLLECTION), {
             name: names[Math.floor(Math.random() * names.length)] + " (Test)",

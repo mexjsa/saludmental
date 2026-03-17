@@ -64,15 +64,26 @@ let currentQuestionIndex = 0;
 const K10_QUESTIONS = [
     "¿Qué tan seguido te has sentido cansado/a o agotado/a sin una buena razón?",
     "¿Qué tan seguido te has sentido muy nervioso/a o intranquilo/a?",
-    "¿Qué tan seguido te has sentido tan desesperado/a o triste que nada lograba animarte?",
+    "¿Qué tan seguido te has sentido tan nervioso/a que nada lograba animarte?",
+    "¿Qué tan seguido te has sentido desesperado/a?",
+    "¿Qué tan seguido te has sentido inquieto/a o intranquilo/a?",
+    "¿Qué tan seguido te has sentido tan impaciente que no has podido mantenerte quieto/a?",
+    "¿Qué tan seguido te has sentido deprimido/a?",
     "¿Qué tan seguido has sentido que todo lo que haces te cuesta muchísimo esfuerzo?",
+    "¿Qué tan seguido te has sentido tan triste que nada lograba animarte?",
     "¿Qué tan seguido te has sentido inútil o que no vales nada?"
 ];
 
 const PHQ9_QUESTIONS = [
     "¿Has tenido poco interés o has dejado de disfrutar las cosas que antes te gustaban?",
     "¿Te has sentido bajoneado/a, deprimido/a o sin esperanzas?",
-    "¿Has tenido problemas con tu sueño? (Ya sea no poder dormir o dormir demasiado)."
+    "¿Has tenido problemas con tu sueño? (Ya sea no poder dormir o dormir demasiado).",
+    "¿Se ha sentido cansado/a o con poca energía?",
+    "¿Ha tenido poco apetito o ha comido en exceso?",
+    "¿Se ha sentido mal con usted mismo/a (o que es un fracaso)?",
+    "¿Ha tenido dificultad para concentrarse en cosas (como leer o ver la TV)?",
+    "¿Se ha movido o hablado tan lento que otros se darían cuenta (o lo contrario)?",
+    "¿Ha pensado que estaría mejor muerto/a o de lastimarse de alguna manera?"
 ];
 
 const SUBSTANCE_ITEMS = [
@@ -364,7 +375,8 @@ function getPhaseMessages(phaseName) {
 async function askNextQuestion() {
     const phase = FLOW[currentPhase];
     const totalQuestions = phase.questions.length;
-    const progress = currentPhase === 'K10' ? (currentQuestionIndex / totalQuestions) * 40 + 20 : (currentQuestionIndex / totalQuestions) * 40 + 60;
+    // Calculation adjusted for longer question lists
+    const progress = currentPhase === 'K10' ? (currentQuestionIndex / totalQuestions) * 45 + 10 : (currentQuestionIndex / totalQuestions) * 40 + 55;
     updateProgress(progress);
 
     if (currentQuestionIndex < totalQuestions) {
@@ -401,11 +413,17 @@ async function handleQuestionResponse(opt) {
     // Store response
     if (currentPhase === 'K10') {
         userData.k10Score += val;
-        if (currentQuestionIndex === 4 && userData.k10Score >= 18) {
+        if (currentQuestionIndex === 9 && userData.k10Score >= 30) {
             await botSpeak(["Lamento que estés sintiendo todo esto, debe ser muy pesado. Lo estás haciendo muy bien al contármelo. Sigamos."]);
         }
     } else if (currentPhase === 'PHQ9') {
-        userData.phq9Score += val;
+        // Question 9 logic (suicide risk)
+        if (currentQuestionIndex === 8 && val > 0) {
+            userData.phq9Score = 24; // Immediate 24 as per requirements
+            userData.suicideFlag = true;
+        } else if (!userData.suicideFlag) {
+            userData.phq9Score += val;
+        }
     }
 
     currentQuestionIndex++;

@@ -75,6 +75,15 @@
                     const cpData = await getRandomCP();
                     if (!cpData) continue;
 
+                    const suicide = Math.random() > 0.85;
+                    const k10 = suicide ? (Math.floor(Math.random() * 21) + 30) : (Math.floor(Math.random() * 41) + 10);
+                    let phq = 0;
+                    if (suicide) {
+                        phq = 24;
+                    } else {
+                        phq = Math.floor(Math.random() * 25);
+                    }
+
                     await addDoc(collection(db, "conasama_responses"), {
                         name: names[Math.floor(Math.random() * names.length)] + " (P)",
                         ageRange: ages[Math.floor(Math.random() * ages.length)],
@@ -86,9 +95,9 @@
                         codigo_postal: cpData.cp,
                         colonia: cpData.colonias[0],
                         tipo_ubicacion: 'cp',
-                        k10Score: Math.floor(Math.random() * 25) + 5,
-                        phq9Score: Math.floor(Math.random() * 9),
-                        suicideFlag: Math.random() > 0.85,
+                        k10Score: k10,
+                        phq9Score: phq,
+                        suicideFlag: suicide,
                         coords: cpData.coords,
                         source: 'test_seed',
                         timestamp: serverTimestamp()
