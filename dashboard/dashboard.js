@@ -21,6 +21,10 @@ const tbodyEl = document.getElementById('leads-tbody');
 const refreshBtn = document.getElementById('refresh-data');
 const searchInput = document.getElementById('search-name');
 
+// Initialize Dashboard
+initMap();
+fetchAndRender();
+
 async function fetchAndRender() {
     console.log("Fetching data from Firebase...");
     try {
@@ -113,14 +117,26 @@ function renderCharts(data) {
     });
 }
 
-function renderMap(data) {
+function initMap() {
     if (!map) {
-        map = L.map('riskMap', { zoomControl: false }).setView([23.6345, -102.5528], 5);
-        // Orion Light Theme Tiles
+        map = L.map('riskMap', { 
+            zoomControl: true, 
+            dragging: true,
+            scrollWheelZoom: false 
+        }).setView([23.6345, -102.5528], 5);
+        
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
+
+        // Force a resize fix to ensure the map renders correctly in its container
+        setTimeout(() => map.invalidateSize(), 500);
     }
+}
+
+function renderMap(data) {
+    initMap();
+    if (!data || data.length === 0) return;
 
     // Clear and redraw markers
     data.forEach(d => {
@@ -194,6 +210,7 @@ function renderTable(data) {
     });
 }
 
+// Refresh handler
 refreshBtn.addEventListener('click', fetchAndRender);
 searchInput.addEventListener('input', (e) => {
     const val = e.target.value.toLowerCase();
@@ -203,6 +220,3 @@ searchInput.addEventListener('input', (e) => {
         row.style.display = name.includes(val) ? '' : 'none';
     });
 });
-
-// Init
-fetchAndRender();
