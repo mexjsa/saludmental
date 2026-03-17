@@ -65,7 +65,7 @@ function renderActiveUsers() {
         type: 'doughnut',
         data: {
             datasets: [{
-                data: [27, 73],
+                data: [0, 100], // Start at zero for first test
                 backgroundColor: ['#1d4d3a', '#f1f5f9'],
                 borderWidth: 0,
                 circumference: 360,
@@ -107,18 +107,26 @@ function renderMap(data) {
     // Clear and redraw markers
     data.forEach(d => {
         if (d.state && MOCK_COORDS[d.state]) {
-            const isCrisis = d.suicideFlag || d.phq9Score >= 5 || d.k10Score >= 15;
-            const markerColor = isCrisis ? '#ef4444' : '#10b981';
+            let markerColor = '#10b981'; // Green (Normal)
+            let riskLabel = 'Normal';
+
+            if (d.suicideFlag) {
+                markerColor = '#ef4444'; // Red (CRITICAL)
+                riskLabel = 'CRÍTICO';
+            } else if (d.phq9Score >= 5 || d.k10Score >= 15) {
+                markerColor = '#f59e0b'; // Yellow (Attention)
+                riskLabel = 'Alto Riesgo';
+            }
             
             L.circleMarker(MOCK_COORDS[d.state], {
-                radius: 10,
+                radius: 12,
                 fillColor: markerColor,
                 color: '#fff',
                 weight: 2,
                 opacity: 1,
                 fillOpacity: 0.9
             }).addTo(map)
-              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${isCrisis ? 'CRÍTICO' : 'Normal'}`);
+              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}`);
         }
     });
 }
