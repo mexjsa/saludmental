@@ -89,30 +89,30 @@
                 </div>
                 <canvas id="timelineChart"></canvas>
             </div>
+
+            <section class="table-section-footer glass">
+                <div class="table-header">
+                    <h3>Registros en Tiempo Real</h3>
+                    <button id="refresh-data" class="btn-refresh">Actualizar</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="leads-table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Nombre</th>
+                                <th>Ubicación</th>
+                                <th>K10</th>
+                                <th>PHQ3</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leads-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
         </section>
     </main>
-
-    <section class="table-section-footer glass">
-        <div class="table-header">
-            <h3>Registros en Tiempo Real</h3>
-            <button id="refresh-data" class="btn-refresh">Actualizar</button>
-        </div>
-        <div class="table-wrapper">
-            <table id="leads-table">
-                <thead>
-                    <tr>
-                        <th>Hora</th>
-                        <th>Nombre</th>
-                        <th>Ubicación</th>
-                        <th>K10</th>
-                        <th>PHQ3</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody id="leads-tbody"></tbody>
-            </table>
-        </div>
-    </section>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
