@@ -395,13 +395,13 @@ function renderTable(data) {
         const tr = document.createElement('tr');
         const isTest = d.source === 'test_seed';
         const location = d.tipo_ubicacion === 'cp' 
-            ? `${d.colonia || ''}, ${d.municipio || ''}, ${d.estado || ''} (${d.codigo_postal})`
-            : `${d.municipality || ''}${d.municipality ? ', ' : ''}${d.state || '-'}`;
+            ? `${d.colonia || ''}, ${d.municipio || ''}<br><span style="color:var(--text-muted); font-size:0.75rem;">${d.estado || ''} (${d.codigo_postal})</span>`
+            : `${d.municipality || ''}<br><span style="color:var(--text-muted); font-size:0.75rem;">${d.state || '-'}</span>`;
 
         tr.innerHTML = `
             <td>${time}</td>
             <td style="font-weight: 600;">${d.name} ${isTest ? '<br><span class="badge" style="background:#e2e8f0; color:#64748b; font-size:0.6rem; margin-top:4px;">PRUEBA</span>' : '<br><span class="badge" style="background:var(--accent); color:white; font-size:0.6rem; margin-top:4px;">REAL</span>'}</td>
-            <td>${d.ageRange || '-'}</td>
+            <td style="white-space: nowrap;">${d.ageRange || '-'}</td>
             <td style="text-transform: capitalize;">${d.gender || '-'}</td>
             <td>${location}</td>
             <td>${d.k10Score || 0}</td>
