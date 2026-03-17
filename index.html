@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECRETARIA DE SALUD | Asistente de Apoyo Psicológico</title>
+    <meta name="description"
+        content="Chatbot de detección temprana para salud mental de la SECRETARIA DE SALUD. Evalúa ansiedad, depresión y riesgo suicida en jóvenes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Background Elements -->
+        <div class="bg-gradient"></div>
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+
+        <main class="chat-container">
+            <header class="chat-header">
+                <div class="brand">
+                    <div class="logo-container">
+                        <img src="/logo_ssa.png"
+                            alt="SECRETARIA DE SALUD Logo" class="logo" onerror="this.src='https://via.placeholder.com/40?text=S'">
+                    </div>
+                    <div class="brand-info">
+                        <h1>Asistente de SALUD</h1>
+                        <span class="status"><span class="pulse"></span> En línea</span>
+                    </div>
+                </div>
+                <div class="progress-wrapper">
+                    <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                </div>
+            </header>
+
+            <section id="chat-messages" class="chat-messages">
+                <!-- Messages will be injected here -->
+            </section>
+
+            <footer class="chat-input-area">
+                <div id="options-container" class="options-container">
+                    <!-- Dynamic buttons will appear here -->
+                </div>
+                <!-- Hidden input for potential manual entry if needed later -->
+                <div class="input-fallback" id="input-fallback" style="display: none;">
+                    <input type="text" id="user-input" placeholder="Escribe tu respuesta...">
+                    <button id="send-btn" class="send-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m22 2-7 20-4-9-9-4Z" />
+                            <path d="M22 2 11 13" />
+                        </svg>
+                    </button>
+                </div>
+            </footer>
+        </main>
+
+        <!-- Emergency Modal (Hidden by default) -->
+        <div id="emergency-modal" class="modal">
+            <div class="modal-content glass">
+                <h2>Línea de la Vida</h2>
+                <p>Si te sientes en una situación de crisis, por favor llama ahora:</p>
+                <a href="tel:8009112000" class="btn btn-emergency">800 911 2000</a>
+                <p class="subtext">Atención gratuita, confidencial y personalizada las 24 horas.</p>
+                <button class="btn btn-close" onclick="closeModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>

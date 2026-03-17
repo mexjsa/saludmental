@@ -39,7 +39,7 @@ let userProfile = null;
 
 // Auth bypass for demo / Supabase Migration
 document.addEventListener('DOMContentLoaded', () => {
-    currentUser = { email: 'admin@conasama.gob.mx' };
+    currentUser = { email: 'admin@salud.gob.mx' };
     userProfile = { role: 'master', name: 'Administrador Maestro' };
     
     updateNavProfile();
