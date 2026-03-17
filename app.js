@@ -97,8 +97,8 @@ const FLOW = {
     },
     K10: {
         messages: [
-            "Gracias por compartir esto conmigo. Ahora, me gustaría saber cómo te has sentido en el último mes.",
-            "No hay respuestas correctas o incorrectas. Solo elige la opción que mejor describa cómo te sientes."
+            "En los últimos 30 días:",
+            "Solo elige la opción que mejor describa cómo te sientes."
         ],
         questions: K10_QUESTIONS,
         options: [
@@ -111,7 +111,7 @@ const FLOW = {
         nextPhase: 'PHQ9'
     },
     PHQ9: {
-        messages: ["Ahora, pensemos solo en las últimas dos semanas. ¿Qué tan seguido te han molestado estas situaciones?"],
+        messages: ["En las últimas dos semanas:"],
         questions: PHQ9_QUESTIONS,
         options: [
             { text: "Ningún día", value: 0 },
@@ -219,12 +219,13 @@ function getPhaseMessages(phaseName) {
     let msgs = [...phase.messages];
     const age = userData.ageRange;
 
-    // Adapting tone based on PRD: 12-14 simple, 15-17 close, 22-29 direct
+    // Adapting tone based on PRD requirements but following user simplification
     if (age === '12-14') {
-        if (phaseName === 'K10') msgs = ["Gracias por compartir. Ahora cuéntame cómo te has sentido este último mes. No hay respuestas malas, tú solo elige lo que sientas."];
-        if (phaseName === 'PHQ9') msgs = ["Ahora pensemos en estas últimas dos semanas. ¿Qué tan seguido te ha pasado esto?"];
+        if (phaseName === 'K10') msgs = ["En los últimos 30 días:", "Elige lo que sientas, no hay respuestas malas."];
+        if (phaseName === 'PHQ9') msgs = ["En las últimas dos semanas:"];
     } else if (age === '22-25' || age === '26-29') {
-        if (phaseName === 'K10') msgs = ["Procederemos con la Escala K10 para evaluar su malestar psicológico en los últimos 30 días.", "Por favor, seleccione la opción que mejor describa su frecuencia de síntomas."];
+        if (phaseName === 'K10') msgs = ["En los últimos 30 días:", "Por favor, seleccione la opción que mejor describa su frecuencia de síntomas."];
+        if (phaseName === 'PHQ9') msgs = ["En las últimas dos semanas:"];
     }
 
     return msgs.map(m => m.replace('{name}', userData.name || 'amigo/a'));
