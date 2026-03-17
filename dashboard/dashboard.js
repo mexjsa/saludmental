@@ -66,6 +66,7 @@ function updateNavProfile() {
     const navAvatar = document.getElementById('nav-avatar');
     const navDate = document.getElementById('nav-date');
     const navCity = document.getElementById('nav-city');
+    const navTime = document.getElementById('nav-time');
 
     if (userProfile) {
         navName.innerText = userProfile.name || currentUser.email.split('@')[0].toUpperCase();
@@ -78,13 +79,21 @@ function updateNavProfile() {
         }
     }
 
-    // Set Date
-    const now = new Date();
-    const options = { day: 'numeric', month: 'short', year: 'numeric' };
-    navDate.innerText = now.toLocaleDateString('es-ES', options);
+    // Set Date & Time
+    const updateTime = () => {
+        const now = new Date();
+        const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+        const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+        
+        if (navDate) navDate.innerText = now.toLocaleDateString('es-ES', dateOptions);
+        if (navTime) navTime.innerText = now.toLocaleTimeString('en-US', timeOptions);
+    };
 
-    // City Mock (could be dynamic)
-    navCity.innerText = "CDMX, México";
+    updateTime();
+    setInterval(updateTime, 30000); // Update every 30 seconds
+
+    // City Mock
+    if (navCity) navCity.innerText = "CDMX, México";
 }
 
 document.getElementById('btn-print-report')?.addEventListener('click', () => {
