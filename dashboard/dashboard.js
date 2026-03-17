@@ -3,8 +3,14 @@ import { collection, query, orderBy, getDocs, limit } from "https://www.gstatic.
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
 
-// Chart instances
-let ageChart, riskChart;
+// Chart & Map instances
+let ageChart, timelineChart, map;
+
+const MOCK_COORDS = {
+    'CDMX': [19.4326, -99.1332],
+    'EDOMEX': [19.3503, -99.6450],
+    'JAL': [20.6597, -103.3496]
+};
 
 // DOM Elements
 const totalUsersEl = document.getElementById('total-users');
@@ -27,6 +33,8 @@ async function fetchAndRender() {
 
         renderOverview(data);
         renderCharts(data);
+        renderTimeline(data);
+        renderMap(data);
         renderTable(data);
     } catch (error) {
         console.error("Error fetching data:", error);
@@ -105,21 +113,81 @@ function renderCharts(data) {
     });
 }
 
+function renderMap(data) {
+    if (!map) {
+        map = L.map('riskMap', { zoomControl: false }).setView([23.6345, -102.5528], 5);
+        // Orion Light Theme Tiles
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(map);
+    }
+
+    // Clear and redraw markers
+    data.forEach(d => {
+        if (d.state && MOCK_COORDS[d.state]) {
+            const isCrisis = d.suicideFlag || d.phq9Score >= 5 || d.k10Score >= 15;
+            const markerColor = isCrisis ? '#ef4444' : '#10b981';
+            
+            L.circleMarker(MOCK_COORDS[d.state], {
+                radius: 10,
+                fillColor: markerColor,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map)
+              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${isCrisis ? 'CRÍTICO' : 'Normal'}`);
+        }
+    });
+}
+
+function renderTimeline(data) {
+    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    
+    // Group interactions by last 12 hours (mocking for minute scale in demo)
+    const timeLabels = ['-60m', '-50m', '-40m', '-30m', '-20m', '-10m', 'Ahora'];
+    const interactData = [12, 19, 15, 25, 22, 30, data.length];
+
+    if (timelineChart) timelineChart.destroy();
+    
+    timelineChart = new Chart(timelineCtx, {
+        type: 'bar',
+        data: {
+            labels: timeLabels,
+            datasets: [{
+                label: 'Interacciones',
+                data: interactData,
+                backgroundColor: '#10b981',
+                borderRadius: 5,
+                barThickness: 20
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { grid: { display: false }, ticks: { display: false } },
+                x: { grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
 function renderTable(data) {
     tbodyEl.innerHTML = '';
     data.forEach(d => {
-        const date = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleDateString() : 'N/A';
+        const time = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
         const statusClass = d.suicideFlag ? 'badge-red' : (d.phq9Score >= 5 || d.k10Score >= 15) ? 'badge-orange' : 'badge-green';
         const statusText = d.suicideFlag ? 'ALERTA ROJA' : (d.phq9Score >= 5 || d.k10Score >= 15) ? 'Riesgo Alto' : 'Normal';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${date}</td>
-            <td style="font-weight: 600;">${d.name || 'Anónimo'}</td>
-            <td>${d.ageRange || '-'}</td>
+            <td>${time}</td>
+            <td style="font-weight: 600;">${d.name}</td>
+            <td>${d.municipality || ''}, ${d.state || '-'}</td>
             <td>${d.k10Score || 0}</td>
             <td>${d.phq9Score || 0}</td>
-            <td>${d.substanceFlag ? 'SÍ' : 'No'}</td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
         `;
         tbodyEl.appendChild(tr);

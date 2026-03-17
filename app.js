@@ -17,7 +17,8 @@ let userData = {
     k10Score: 0,
     phq9Score: 0,
     suicideFlag: false,
-    substanceFlag: false,
+    state: '',
+    municipality: '',
     responses: {}
 };
 
@@ -85,6 +86,24 @@ const FLOW = {
             { text: "No binario", value: "no-binario" },
             { text: "Otro", value: "otro" },
             { text: "Prefiero no decirlo", value: "n-a" }
+        ],
+        nextPhase: 'LOCATION'
+    },
+    LOCATION: {
+        messages: ["Para poder orientarte mejor según donde vives, ¿en qué estado te encuentras?"],
+        options: [
+            { text: "Ciudad de México", value: "CDMX" },
+            { text: "Estado de México", value: "EDOMEX" },
+            { text: "Jalisco", value: "JAL" }
+        ],
+        nextPhase: 'MUNICIPALITY'
+    },
+    MUNICIPALITY: {
+        messages: ["¡Entendido! ¿Y en qué municipio o alcaldía?"],
+        options: [
+            { text: "Iztapalapa", value: "iztapalapa" },
+            { text: "Ecatepec", value: "ecatepec" },
+            { text: "Guadalajara", value: "guadalajara" }
         ],
         nextPhase: 'EMERGENCY_CONTACT'
     },
@@ -253,8 +272,11 @@ function handleOptionSelect(opt) {
     if (currentPhase === 'AGE') {
         userData.ageRange = opt.value;
     }
-    if (currentPhase === 'SUBSTANCES' && opt.value > 0) {
-        userData.substanceFlag = true;
+    if (currentPhase === 'LOCATION') {
+        userData.state = opt.value;
+    }
+    if (currentPhase === 'MUNICIPALITY') {
+        userData.municipality = opt.value;
     }
     if (opt.suicideFlag) {
         userData.suicideFlag = true;
