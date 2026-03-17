@@ -228,12 +228,16 @@ function renderTable(data) {
 
         const tr = document.createElement('tr');
         const isTest = d.source === 'test_seed';
+        const location = d.tipo_ubicacion === 'cp' 
+            ? `${d.colonia || ''}, ${d.municipio || ''}, ${d.estado || ''} (${d.codigo_postal})`
+            : `${d.municipality || ''}${d.municipality ? ', ' : ''}${d.state || '-'}`;
+
         tr.innerHTML = `
             <td>${time}</td>
             <td style="font-weight: 600;">${d.name} ${isTest ? '<span class="badge" style="background:#e2e8f0; color:#64748b; font-size:0.6rem;">PRUEBA</span>' : ''}</td>
             <td>${d.ageRange || '-'}</td>
             <td style="text-transform: capitalize;">${d.gender || '-'}</td>
-            <td>${d.municipality || ''}, ${d.state || '-'}</td>
+            <td>${location}</td>
             <td>${d.k10Score || 0}</td>
             <td>${d.phq9Score || 0}</td>
             <td><span class="badge ${statusClass}">${statusText}</span></td>
@@ -267,8 +271,11 @@ async function seedMockData() {
             name: names[Math.floor(Math.random() * names.length)] + " (Test)",
             ageRange: ages[Math.floor(Math.random() * ages.length)],
             gender: genders[Math.floor(Math.random() * genders.length)],
+            tipo_ubicacion: 'estado',
             state: state,
+            estado: state,
             municipality: mun,
+            municipio: mun,
             k10Score: k10,
             phq9Score: phq,
             suicideFlag: suicide,

@@ -4,6 +4,20 @@ import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/fir
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
 
+async function resolveCP(cp) {
+    if (!/^\d{5}$/.test(cp)) return null;
+    const prefix = cp.substring(0, 3);
+    try {
+        const response = await fetch(`./api/cp/${prefix}.json`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        return data[cp] || null;
+    } catch (e) {
+        console.error("Error resolving CP:", e);
+        return null;
+    }
+}
+
 // DOM Elements
 const chatMessages = document.getElementById('chat-messages');
 const optionsContainer = document.getElementById('options-container');
@@ -14,11 +28,16 @@ let userData = {
     name: '',
     ageRange: '',
     gender: '',
+    tipo_ubicacion: '', // 'cp' or 'estado'
+    codigo_postal: '',
+    estado: '',
+    state: '',
+    municipio: '',
+    municipality: '',
+    colonia: '',
     k10Score: 0,
     phq9Score: 0,
     suicideFlag: false,
-    state: '',
-    municipality: '',
     responses: {}
 };
 
@@ -87,25 +106,80 @@ const FLOW = {
             { text: "Otro", value: "otro" },
             { text: "Prefiero no decirlo", value: "n-a" }
         ],
-        nextPhase: 'LOCATION'
+        nextPhase: 'LOCATION_DECISION'
     },
-    LOCATION: {
-        messages: ["Para poder orientarte mejor según donde vives, ¿en qué estado te encuentras?"],
+    LOCATION_DECISION: {
+        messages: ["¡Entendido! ¿Conoces tu código postal? Si no pasa nada 😊, también puedes decirme en qué estado vives."],
         options: [
-            { text: "Ciudad de México", value: "CDMX" },
-            { text: "Estado de México", value: "EDOMEX" },
-            { text: "Jalisco", value: "JAL" }
-        ],
-        nextPhase: 'MUNICIPALITY'
+            { text: "Sí, lo conozco", nextPhase: 'INPUT_CP' },
+            { text: "No, mejor el estado", nextPhase: 'INPUT_STATE' }
+        ]
     },
-    MUNICIPALITY: {
-        messages: ["¡Entendido! ¿Y en qué municipio o alcaldía?"],
+    INPUT_CP: {
+        messages: ["Escribe tu código postal (los 5 números):"],
+        input: true,
+        onInput: async (val) => {
+            const data = await resolveCP(val);
+            if (data) {
+                userData.codigo_postal = val;
+                userData.estado = data.estado;
+                userData.state = data.estado; 
+                userData.municipio = data.municipio;
+                userData.municipality = data.municipio;
+                userData.tempColonias = data.colonias;
+                startPhase('CONFIRM_CP');
+            } else {
+                addMessage("Ese código postal no parece correcto o no lo encontré. Revísalo e intenta de nuevo 😊", 'bot');
+                showInputFallback(FLOW.INPUT_CP.onInput);
+            }
+        }
+    },
+    CONFIRM_CP: {
+        messages: ["Encontré esta ubicación: \n📍 {estado}, {municipio}. \n¿Es correcto?"],
         options: [
-            { text: "Iztapalapa", value: "iztapalapa" },
-            { text: "Ecatepec", value: "ecatepec" },
-            { text: "Guadalajara", value: "guadalajara" }
-        ],
-        nextPhase: 'EMERGENCY_CONTACT'
+            { text: "Sí, es correcto", action: () => {
+                if (userData.tempColonias && userData.tempColonias.length > 1) {
+                    startPhase('SELECT_COLONY');
+                } else {
+                    userData.colonia = userData.tempColonias ? userData.tempColonias[0] : '';
+                    userData.tipo_ubicacion = 'cp';
+                    startPhase('EMERGENCY_CONTACT');
+                }
+            }},
+            { text: "No, corregir", nextPhase: 'INPUT_CP' }
+        ]
+    },
+    SELECT_COLONY: {
+        messages: ["¿En qué colonia te encuentras?"],
+        options: [], 
+        onEnter: () => {
+            const opts = userData.tempColonias.map(c => ({
+                text: c,
+                action: () => {
+                    userData.colonia = c;
+                    userData.tipo_ubicacion = 'cp';
+                    addMessage(c, 'user');
+                    startPhase('EMERGENCY_CONTACT');
+                }
+            }));
+            renderOptions(opts, (opt) => opt.action());
+        }
+    },
+    INPUT_STATE: {
+        messages: ["No hay problema 👍 ¿En qué estado vives?"],
+        options: [
+            "Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua",
+            "Ciudad de México","Coahuila","Colima","Durango","Estado de México","Guanajuato",
+            "Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León",
+            "Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa",
+            "Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"
+        ].map(s => ({ text: s, value: s })),
+        onSelect: (opt) => {
+            userData.estado = opt.value;
+            userData.state = opt.value; 
+            userData.tipo_ubicacion = 'estado';
+            startPhase('EMERGENCY_CONTACT');
+        }
     },
     EMERGENCY_CONTACT: {
         messages: ["A veces, si noto que estás pasando por un momento muy difícil o de riesgo, mi deber es asegurarme de que estés a salvo y conectarte con un humano.", "¿Me podrías compartir un teléfono o correo de contacto solo para emergencias?"],
@@ -211,6 +285,10 @@ async function startPhase(phaseName) {
         return;
     }
 
+    if (phase.onEnter) {
+        phase.onEnter();
+    }
+
     if (phase.action) {
         phase.action();
         return;
@@ -247,7 +325,9 @@ function getPhaseMessages(phaseName) {
         if (phaseName === 'PHQ9') msgs = ["En las últimas dos semanas:"];
     }
 
-    return msgs.map(m => m.replace('{name}', userData.name || 'amigo/a'));
+    return msgs.map(m => m.replace('{name}', userData.name || 'amigo/a')
+                        .replace('{estado}', userData.estado || '')
+                        .replace('{municipio}', userData.municipio || ''));
 }
 
 async function askNextQuestion() {
@@ -269,14 +349,13 @@ function handleOptionSelect(opt) {
         opt.action();
         return;
     }
+    const phase = FLOW[currentPhase];
+    if (phase.onSelect) {
+        phase.onSelect(opt);
+        return;
+    }
     if (currentPhase === 'AGE') {
         userData.ageRange = opt.value;
-    }
-    if (currentPhase === 'LOCATION') {
-        userData.state = opt.value;
-    }
-    if (currentPhase === 'MUNICIPALITY') {
-        userData.municipality = opt.value;
     }
     if (opt.suicideFlag) {
         userData.suicideFlag = true;
