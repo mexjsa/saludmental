@@ -4,7 +4,7 @@ import { collection, query, orderBy, getDocs, limit } from "https://www.gstatic.
 const CHAT_LOG_COLLECTION = "conasama_responses";
 
 // Chart & Map instances
-let timelineChart, map;
+let timelineChart, map, activeUsersChart;
 
 const MOCK_COORDS = {
     'CDMX': [19.4326, -99.1332],
@@ -36,6 +36,7 @@ async function fetchAndRender() {
         });
 
         renderOverview(data);
+        renderActiveUsers();
         renderTimeline(data);
         renderMap(data);
         renderTable(data);
@@ -55,6 +56,30 @@ function renderOverview(data) {
     totalEmergenciesEl.innerText = emergencies;
     totalAttentionEl.innerText = attention;
     totalLeveEl.innerText = leve;
+}
+
+function renderActiveUsers() {
+    const ctx = document.getElementById('activeUsersChart').getContext('2d');
+    if (activeUsersChart) activeUsersChart.destroy();
+    
+    activeUsersChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [27, 73],
+                backgroundColor: ['#1d4d3a', '#f1f5f9'],
+                borderWidth: 0,
+                circumference: 360,
+                rotation: 0,
+                cutout: '80%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        }
+    });
 }
 
 
@@ -102,8 +127,7 @@ function renderMap(data) {
 function renderTimeline(data) {
     const timelineCtx = document.getElementById('timelineChart').getContext('2d');
     
-    // Group interactions by last 12 hours (mocking for minute scale in demo)
-    const timeLabels = ['-60m', '-50m', '-40m', '-30m', '-20m', '-10m', 'Ahora'];
+    const timeLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S']; // Donezo style labels
     const interactData = [12, 19, 15, 25, 22, 30, data.length];
 
     if (timelineChart) timelineChart.destroy();
@@ -115,17 +139,27 @@ function renderTimeline(data) {
             datasets: [{
                 label: 'Interacciones',
                 data: interactData,
-                backgroundColor: '#10b981',
-                borderRadius: 5,
-                barThickness: 20
+                backgroundColor: (context) => {
+                    const index = context.dataIndex;
+                    return index === 3 ? '#1d4d3a' : '#3bb55d88'; // Highlight Wednesday as in Ref
+                },
+                borderRadius: 20,
+                barThickness: 30
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: { bottom: 10 }
+            },
             scales: {
-                y: { grid: { display: false }, ticks: { display: false } },
-                x: { grid: { display: false } }
+                y: { display: false },
+                x: { 
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: { color: '#94a3b8', font: { weight: 'bold' } }
+                }
             },
             plugins: { legend: { display: false } }
         }

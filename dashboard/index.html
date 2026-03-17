@@ -21,10 +21,24 @@
         <!-- Sidebar Gauges/Metrics -->
         <aside class="sidebar-metrics">
             <div class="nav-brand">
-                <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA" class="nav-logo">
+                <div class="brand-header">
+                    <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA" class="nav-logo">
+                    <span class="live-pill"><span class="pulse"></span> LIVE</span>
+                </div>
                 <div class="brand-text">
                     <h1>CONASAMA</h1>
                     <span>Monitor de salud mental reportada por usuarios</span>
+                </div>
+            </div>
+
+            <div class="active-users-section">
+                <div class="gauge-container">
+                    <canvas id="activeUsersChart"></canvas>
+                    <div class="gauge-value">27%</div>
+                </div>
+                <div class="active-stats">
+                    <div class="active-number">92,980</div>
+                    <div class="active-label">Usuarios activos</div>
                 </div>
             </div>
 
@@ -65,9 +79,8 @@
             <div class="map-wrapper glass">
                 <div class="map-header">
                     <h2>Monitoreo Geográfico Nacional</h2>
-                    <span class="live-indicator"><span class="pulse"></span> LIVE</span>
                 </div>
-                <div id="riskMap" style="height: 60vh; width: 100%;"></div>
+                <div id="riskMap" style="height: 55vh; width: 100%;"></div>
             </div>
 
             <div class="timeline-wrapper glass">
