@@ -448,12 +448,30 @@ function renderTable(data) {
 const CP_PREFIXES = ["010", "045", "066", "110", "200", "290", "300", "441", "450", "500", "550", "640", "720", "760", "800", "970"];
 
 async function getRandomCP() {
-    const prefix = CP_PREFIXES[Math.floor(Math.random() * CP_PREFIXES.length)];
     try {
+        // Query Supabase for random CP
+        const { data, error } = await supabase
+            .from('postal_codes')
+            .select('*')
+            .limit(100); // Get a batch and pick one
+            
+        if (data && data.length > 0) {
+            const item = data[Math.floor(Math.random() * data.length)];
+            return {
+                cp: item.cp,
+                estado: item.estado,
+                municipio: item.municipio,
+                colonias: item.colonias,
+                coords: { lat: item.lat, lon: item.lon }
+            };
+        }
+        
+        // Fallback local
+        const prefix = CP_PREFIXES[Math.floor(Math.random() * CP_PREFIXES.length)];
         const res = await fetch(`../api/cp/${prefix}.json`);
         if (!res.ok) return null;
-        const data = await res.json();
-        const cps = Object.values(data);
+        const localData = await res.json();
+        const cps = Object.values(localData);
         return cps[Math.floor(Math.random() * cps.length)];
     } catch (e) {
         return null;
@@ -466,7 +484,7 @@ async function seedMockData() {
     const ages = ["12-14", "15-17", "18-21", "22-25", "26-29"];
     const genders = ["mujer", "hombre", "no-binario", "otro"];
 
-    let count = 0;
+    const testData = [];
     for (let i = 0; i < 50; i++) {
         const cpData = await getRandomCP();
         if (!cpData) continue;
@@ -481,27 +499,32 @@ async function seedMockData() {
             phq = Math.floor(Math.random() * 25);
         }
 
-        await addDoc(collection(db, CHAT_LOG_COLLECTION), {
-            name: names[Math.floor(Math.random() * names.length)] + " (Test)",
-            ageRange: ages[Math.floor(Math.random() * ages.length)],
+        testData.push({
+            name: names[Math.floor(Math.random() * names.length)] + " (Prueba)",
+            age_range: ages[Math.floor(Math.random() * ages.length)],
             gender: genders[Math.floor(Math.random() * genders.length)],
             tipo_ubicacion: 'cp',
             codigo_postal: cpData.cp,
-            state: cpData.estado,
             estado: cpData.estado,
-            municipality: cpData.municipio,
             municipio: cpData.municipio,
             colonia: cpData.colonias[0],
-            k10Score: k10,
-            phq9Score: phq,
-            suicideFlag: suicide,
+            k10_score: k10,
+            phq9_score: phq,
+            suicide_flag: suicide,
             coords: cpData.coords,
-            source: 'test_seed',
-            timestamp: serverTimestamp()
+            source: 'test_seed'
         });
-        count++;
     }
-    alert(`¡${count} casos de prueba con ubicaciones reales cargados exitosamente!`);
+
+    const { error } = await supabase
+        .from('conasama_responses')
+        .insert(testData);
+
+    if (error) {
+        alert("Error al cargar datos en Supabase: " + error.message);
+    } else {
+        alert(`¡50 casos de prueba con ubicaciones reales cargados exitosamente en Supabase!`);
+    }
 }
 
 // Expose globally

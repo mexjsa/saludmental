@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Migración CP a Supabase</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; }
+        .log { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; height: 300px; overflow-y: scroll; font-family: monospace; font-size: 12px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>🚀 Migración de Catálogo CP a Supabase</h1>
+    <p>Este proceso cargará los códigos postales en la tabla <code>postal_codes</code>.</p>
+    
+    <button id="btn-start" style="padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer;">INICIAR MIGRACIÓN</button>
+    <div id="status" style="margin-top: 10px;">Listo para iniciar.</div>
+    <div id="log" class="log"></div>
+
+    <script type="module">
+        import { supabase } from '../supabase-config.js';
+
+        const status = document.getElementById('status');
+        const log = document.getElementById('log');
+        const btnStart = document.getElementById('btn-start');
+
+        function addLog(msg, type = '') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerText = msg;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        btnStart.onclick = async () => {
+            btnStart.disabled = true;
+            status.innerHTML = "⏳ Migrando... por favor no cierres esta ventana.";
+            
+            try {
+                // 1. Verificar/Crear tabla NO ES POSIBLE VIA ANON KEY
+                // El usuario DEBE haber ejecutado el SQL primero. 
+                // Asumimos que la tabla existe.
+                
+                addLog("Iniciando lectura de prefijos...");
+                const CP_PREFIXES = ["010", "011", "043", "045", "066", "110", "200", "290", "300", "441", "450", "500", "550", "640", "720", "760", "800", "970"]; // Solo algunos para demo o todos si prefieres
+                
+                // En realidad deberíamos cargar TODOS. Pero el usuario tiene 953 archivos JSON.
+                // Los prefijos van de 010 a 999.
+                
+                let count = 0;
+                for (let i = 10; i <= 999; i++) {
+                    const prefix = String(i).padStart(3, '0');
+                    try {
+                        const res = await fetch(`../api/cp/${prefix}.json`);
+                        if (!res.ok) continue;
+                        
+                        const data = await res.json();
+                        const batch = Object.values(data).map(item => ({
+                            cp: item.cp,
+                            estado: item.estado,
+                            municipio: item.municipio,
+                            colonias: item.colonias,
+                            lat: item.coords ? item.coords.lat : null,
+                            lon: item.coords ? item.coords.lon : null
+                        }));
+
+                        const { error } = await supabase
+                            .from('postal_codes')
+                            .upsert(batch);
+                        
+                        if (error) {
+                            addLog(`❌ Error en prefijo ${prefix}: ${error.message}`, 'error');
+                        } else {
+                            count += batch.length;
+                            addLog(`✅ Prefijo ${prefix} cargado (${batch.length} registros). Total: ${count}`);
+                        }
+                    } catch (e) {
+                        // Saltamos si el archivo no existe
+                    }
+                }
+                
+                status.innerHTML = `<span class="success">✅ MIGRACIÓN COMPLETADA. ${count} registros cargados.</span>`;
+                addLog("MIGRACIÓN COMPLETADA!");
+            } catch (err) {
+                status.innerHTML = `<span class="error">❌ ERROR: ${err.message}</span>`;
+                addLog(err.message, 'error');
+            }
+        };
+    </script>
+</body>
+</html>

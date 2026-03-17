@@ -20,14 +20,33 @@ startPresence();
 
 async function resolveCP(cp) {
     if (!/^\d{5}$/.test(cp)) return null;
-    const prefix = cp.substring(0, 3);
+    
     try {
+        // Query Supabase instead of local JSON
+        const { data, error } = await supabase
+            .from('postal_codes')
+            .select('*')
+            .eq('cp', cp)
+            .single();
+            
+        if (data) {
+            return {
+                cp: data.cp,
+                estado: data.estado,
+                municipio: data.municipio,
+                colonias: data.colonias,
+                coords: (data.lat && data.lon) ? { lat: data.lat, lon: data.lon } : null
+            };
+        }
+        
+        // Fallback to local JSON if Supabase fails or table not found (during transition)
+        const prefix = cp.substring(0, 3);
         const response = await fetch(`./api/cp/${prefix}.json`);
         if (!response.ok) return null;
-        const data = await response.json();
-        return data[cp] || null;
+        const localData = await response.json();
+        return localData[cp] || null;
     } catch (e) {
-        console.error("Error resolving CP:", e);
+        console.error("Error resolving CP (Supabase/Local):", e);
         return null;
     }
 }
