@@ -1,6 +1,6 @@
 import { supabase } from './supabase-config.js';
 
-const CHAT_LOG_COLLECTION = "salud_responses";
+const CHAT_LOG_COLLECTION = "conasama_responses";
 const PRESENCE_COLLECTION = "presence";
 const sessionId = Math.random().toString(36).substring(7);
 
@@ -520,7 +520,7 @@ function terminateChat(farewell) {
 async function saveResult(data) {
     try {
         const { error } = await supabase
-            .from('salud_responses')
+            .from('conasama_responses')
             .insert([{
                 ...data,
                 source: 'production'
@@ -540,7 +540,7 @@ async function calculateFinalResults() {
     // Save to Supabase
     try {
         const { error } = await supabase
-            .from('salud_responses')
+            .from('conasama_responses')
             .insert([{
                 name: userData.name,
                 age_range: userData.ageRange,

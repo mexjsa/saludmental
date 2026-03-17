@@ -26,7 +26,7 @@
             status.innerHTML = "🗑️ Borrando datos antigos en Supabase...";
             
             const { error } = await supabase
-                .from('salud_responses')
+                .from('conasama_responses')
                 .delete()
                 .eq('source', 'test_seed');
             
@@ -86,7 +86,7 @@
                 }
 
                 const { error } = await supabase
-                    .from('salud_responses')
+                    .from('conasama_responses')
                     .insert(testData);
 
                 if (error) throw error;

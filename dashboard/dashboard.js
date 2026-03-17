@@ -1,6 +1,6 @@
 import { supabase } from '../supabase-config.js';
 
-const CHAT_LOG_COLLECTION = "salud_responses";
+const CHAT_LOG_COLLECTION = "conasama_responses";
 const PRESENCE_COLLECTION = "presence";
 
 // Chart & Map instances
@@ -132,7 +132,7 @@ async function fetchAndRender() {
 
     const loadData = async () => {
         const { data, error, count } = await supabase
-            .from('salud_responses')
+            .from('conasama_responses')
             .select('*', { count: 'exact' })
             .order('created_at', { ascending: false })
             .limit(2000);
@@ -184,7 +184,7 @@ async function fetchAndRender() {
         .channel('schema-db-changes')
         .on(
             'postgres_changes',
-            { event: '*', schema: 'public', table: 'salud_responses' },
+            { event: '*', schema: 'public', table: 'conasama_responses' },
             (payload) => {
                 console.log('Change received!', payload);
                 loadData();
@@ -570,7 +570,7 @@ async function seedMockData() {
     }
 
     const { error } = await supabase
-        .from('salud_responses')
+        .from('conasama_responses')
         .insert(testData);
 
     if (error) {
