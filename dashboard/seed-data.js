@@ -1,7 +1,7 @@
 import { db } from '../firebase-config.js';
 import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-const CHAT_LOG_COLLECTION = "conasama_responses";
+const CHAT_LOG_COLLECTION = "salud_responses";
 
 // Lista de prefijos comunes para diversificar la muestra
 const CP_PREFIXES = ["010", "045", "066", "110", "200", "290", "300", "441", "450", "500", "550", "640", "720", "760", "800", "970"];

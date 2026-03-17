@@ -1,4 +1,4 @@
-// Firebase Configuration - CONASAMA CHATBOT
+// Firebase Configuration - SECRETARIA DE SALUD CHATBOT
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
@@ -26,7 +26,7 @@ export const analytics = typeof window !== "undefined" ? getAnalytics(app) : nul
   
   service cloud.firestore {
     match /databases/{database}/documents {
-      match /conasama_responses/{document} {
+      match /salud_responses/{document} {
         allow create: if true; 
         allow read: if true; // Cambiar a false en PROD si no usas el dashboard público
         allow update, delete: if false;
