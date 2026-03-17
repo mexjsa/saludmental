@@ -83,8 +83,18 @@
             </header>
 
             <div class="map-wrapper glass">
-                <div class="map-header">
-                    <h2>Monitoreo Geográfico Nacional</h2>
+                <div class="map-filters">
+                    <div class="filter-group">
+                        <select id="filter-state" class="form-select filter-select">
+                            <option value="">Todos los Estados</option>
+                        </select>
+                        <select id="filter-municipality" class="form-select filter-select">
+                            <option value="">Todos los Municipios</option>
+                        </select>
+                    </div>
+                    <div class="filter-search">
+                        <input type="text" id="search-geo" placeholder="Buscar por CP o Clave Mpio..." class="form-input filter-input">
+                    </div>
                 </div>
                 <div id="riskMap" style="height: 55vh; width: 100%;"></div>
             </div>

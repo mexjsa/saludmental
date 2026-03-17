@@ -254,11 +254,29 @@ body.light-theme {
     min-height: 60vh;
 }
 
-.map-header {
+.map-filters {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.filter-select {
+    min-width: 180px;
+    background-color: #f1f5f9;
+    font-weight: 600;
+}
+
+.filter-input {
+    min-width: 250px;
+    background-color: #f1f5f9;
 }
 
 .live-indicator {

@@ -14,7 +14,6 @@ const MOCK_COORDS = {
     'JAL': [20.6597, -103.3496]
 };
 
-// DOM Elements
 const totalUsersEl = document.getElementById('total-users');
 const totalEmergenciesEl = document.getElementById('total-emergencies');
 const totalAttentionEl = document.getElementById('total-atention');
@@ -22,6 +21,12 @@ const totalLeveEl = document.getElementById('total-leve');
 const tbodyEl = document.getElementById('leads-tbody');
 const refreshBtn = document.getElementById('refresh-data');
 const searchInput = document.getElementById('search-name');
+const stateFilter = document.getElementById('filter-state');
+const muniFilter = document.getElementById('filter-municipality');
+const geoSearchInput = document.getElementById('search-geo');
+
+let fullData = [];
+let filteredData = [];
 
 // Auth & Role State
 let currentUser = null;
@@ -106,19 +111,18 @@ async function fetchAndRender() {
     const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(500));
     
     onSnapshot(q, (querySnapshot) => {
-        let data = [];
+        fullData = [];
         querySnapshot.forEach((doc) => {
-            data.push({ id: doc.id, ...doc.data() });
+            fullData.push({ id: doc.id, ...doc.data() });
         });
 
         if (userProfile.role !== 'master') {
             const allowedRegions = userProfile.regions || [];
-            data = data.filter(d => allowedRegions.includes(d.state));
+            fullData = fullData.filter(d => allowedRegions.includes(d.state));
         }
 
-        renderOverview(data);
-        renderMap(data);
-        renderTable(data);
+        populateFilters();
+        applyFilters();
     }, (error) => {
         console.error("Error in real-time listener:", error);
         tbodyEl.innerHTML = `<tr><td colspan="7" style="color: #ef4444; text-align: center;">Error de conexión en tiempo real.</td></tr>`;
@@ -201,6 +205,91 @@ function initMap() {
 
         // Force a resize fix to ensure the map renders correctly in its container
         setTimeout(() => map.invalidateSize(), 500);
+    }
+}
+
+function populateFilters() {
+    const states = [...new Set(fullData.map(d => d.state || d.estado))].filter(Boolean).sort();
+    const currentState = stateFilter.value;
+    
+    stateFilter.innerHTML = '<option value="">Todos los Estados</option>';
+    states.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.innerText = s;
+        if (s === currentState) opt.selected = true;
+        stateFilter.appendChild(opt);
+    });
+
+    updateMunicipalityFilter();
+}
+
+function updateMunicipalityFilter() {
+    const selectedState = stateFilter.value;
+    let munis = [];
+    if (selectedState) {
+        munis = [...new Set(fullData.filter(d => (d.state || d.estado) === selectedState).map(d => d.municipio || d.municipality))];
+    } else {
+        munis = [...new Set(fullData.map(d => d.municipio || d.municipality))];
+    }
+    munis = munis.filter(Boolean).sort();
+
+    const currentMuni = muniFilter.value;
+    muniFilter.innerHTML = '<option value="">Todos los Municipios</option>';
+    munis.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.innerText = m;
+        if (m === currentMuni) opt.selected = true;
+        muniFilter.appendChild(opt);
+    });
+}
+
+function applyFilters() {
+    const nameVal = searchInput.value.toLowerCase();
+    const stateVal = stateFilter.value;
+    const muniVal = muniFilter.value;
+    const geoVal = geoSearchInput.value.toLowerCase();
+
+    filteredData = fullData.filter(d => {
+        const matchesName = (d.name || '').toLowerCase().includes(nameVal);
+        const matchesState = !stateVal || (d.state || d.estado) === stateVal;
+        const matchesMuni = !muniVal || (d.municipio || d.municipality) === muniVal;
+        const matchesGeo = !geoVal || 
+            (d.codigo_postal || '').toLowerCase().includes(geoVal) || 
+            (d.c_mnpio || '').toLowerCase().includes(geoVal);
+        
+        return matchesName && matchesState && matchesMuni && matchesGeo;
+    });
+
+    renderOverview(filteredData);
+    renderMap(filteredData);
+    renderTable(filteredData);
+    
+    zoomToFilter(stateVal, muniVal);
+}
+
+function zoomToFilter(state, muni) {
+    if (!map) return;
+    
+    if (muni && filteredData.length > 0) {
+        // Zoom to municipality average
+        const validCoords = filteredData.filter(d => d.coords && d.coords.lat);
+        if (validCoords.length > 0) {
+            const latSum = validCoords.reduce((acc, curr) => acc + curr.coords.lat, 0);
+            const lonSum = validCoords.reduce((acc, curr) => acc + curr.coords.lon, 0);
+            map.setView([latSum / validCoords.length, lonSum / validCoords.length], 10);
+        }
+    } else if (state && filteredData.length > 0) {
+        // Zoom to state average
+        const validCoords = filteredData.filter(d => d.coords && d.coords.lat);
+        if (validCoords.length > 0) {
+            const latSum = validCoords.reduce((acc, curr) => acc + curr.coords.lat, 0);
+            const lonSum = validCoords.reduce((acc, curr) => acc + curr.coords.lon, 0);
+            map.setView([latSum / validCoords.length, lonSum / validCoords.length], 7);
+        }
+    } else if (!state && !muni) {
+        map.setView([23.6345, -102.5528], 5);
     }
 }
 
@@ -354,11 +443,10 @@ refreshBtn.addEventListener('click', () => {
 // Logout handler
 window.handleLogout = () => signOut(auth);
 
-searchInput.addEventListener('input', (e) => {
-    const val = e.target.value.toLowerCase();
-    const rows = tbodyEl.querySelectorAll('tr');
-    rows.forEach(row => {
-        const name = row.querySelector('td:nth-child(2)').innerText.toLowerCase();
-        row.style.display = name.includes(val) ? '' : 'none';
-    });
+searchInput.addEventListener('input', applyFilters);
+stateFilter.addEventListener('change', () => {
+    updateMunicipalityFilter();
+    applyFilters();
 });
+muniFilter.addEventListener('change', applyFilters);
+geoSearchInput.addEventListener('input', applyFilters);
