@@ -1,8 +1,23 @@
 // CONASAMA Chatbot Core Logic
 import { db } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
+const PRESENCE_COLLECTION = "presence";
+const sessionId = Math.random().toString(36).substring(7);
+
+async function updatePresence() {
+    if (typeof db === 'undefined') return;
+    try {
+        await setDoc(doc(db, PRESENCE_COLLECTION, sessionId), {
+            lastActive: serverTimestamp()
+        });
+    } catch (e) { console.error("Error updating presence:", e); }
+}
+
+// Start heartbeat
+setInterval(updatePresence, 30000); // every 30s
+updatePresence();
 
 async function resolveCP(cp) {
     if (!/^\d{5}$/.test(cp)) return null;

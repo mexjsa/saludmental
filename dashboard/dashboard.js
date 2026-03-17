@@ -1,8 +1,9 @@
 import { db, auth } from '../firebase-config.js';
-import { collection, query, orderBy, getDocs, limit, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { collection, query, orderBy, getDocs, limit, addDoc, serverTimestamp, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
+const PRESENCE_COLLECTION = "presence";
 
 // Chart & Map instances
 let map, activeUsersChart;
@@ -92,43 +93,45 @@ if (btnCreateAdmin) {
         // or just advise manual creation in Firebase Console for this prototype phase.
     };
 }
-
 async function fetchAndRender() {
-    console.log("Fetching filtered data for role:", userProfile.role);
-    try {
-        const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(200));
-        const querySnapshot = await getDocs(q);
+    console.log("Setting up real-time listener for role:", userProfile.role);
+    const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(200));
+    
+    onSnapshot(q, (querySnapshot) => {
         let data = [];
         querySnapshot.forEach((doc) => {
             data.push({ id: doc.id, ...doc.data() });
         });
 
-        // Filter by region if not master
         if (userProfile.role !== 'master') {
             const allowedRegions = userProfile.regions || [];
             data = data.filter(d => allowedRegions.includes(d.state));
         }
 
         renderOverview(data);
-        renderActiveUsers();
         renderMap(data);
         renderTable(data);
-        
-        // Hide Admin Panel if not master
-        if (userProfile.role !== 'master') {
-            document.getElementById('admin-nav-item')?.remove();
-        }
-        
-        // Disable "Actualizar" or other edits if viewer
-        if (userProfile.role === 'viewer') {
-            refreshBtn.style.opacity = '0.5';
-            refreshBtn.title = "Solo lectura";
-        }
+    }, (error) => {
+        console.error("Error in real-time listener:", error);
+        tbodyEl.innerHTML = `<tr><td colspan="7" style="color: #ef4444; text-align: center;">Error de conexión en tiempo real.</td></tr>`;
+    });
 
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        tbodyEl.innerHTML = `<tr><td colspan="7" style="color: #ef4444; text-align: center;">Error al conectar con Firebase. Verifica la configuración.</td></tr>`;
-    }
+    listenToPresence();
+}
+
+function listenToPresence() {
+    const q = collection(db, PRESENCE_COLLECTION);
+    onSnapshot(q, (snapshot) => {
+        const now = Date.now();
+        let activeCount = 0;
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            if (d.lastActive && (now - d.lastActive.toMillis()) < 120000) { // 2 minutes
+                activeCount++;
+            }
+        });
+        renderActiveUsers(activeCount);
+    });
 }
 
 function renderOverview(data) {
@@ -143,16 +146,21 @@ function renderOverview(data) {
     totalLeveEl.innerText = leve;
 }
 
-function renderActiveUsers() {
+function renderActiveUsers(count = 0) {
     const ctx = document.getElementById('activeUsersChart').getContext('2d');
     if (activeUsersChart) activeUsersChart.destroy();
+    
+    // UI update for the percentage/text
+    const activeText = document.querySelector('.active-users-count') || document.createElement('div');
+    // Ensure the percentage text inside the donut is updated if it exists
+    // For now, we'll just focus on the chart data
     
     activeUsersChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             datasets: [{
-                data: [0, 100], // Start at zero for first test
-                backgroundColor: ['#1d4d3a', '#f1f5f9'],
+                data: [count, Math.max(0, 10 - count)], // Assuming a small cluster for demo
+                backgroundColor: ['#10b981', '#f1f5f9'],
                 borderWidth: 0,
                 circumference: 360,
                 rotation: 0,
@@ -167,7 +175,7 @@ function renderActiveUsers() {
     });
 }
 
-let markersLayer = L.layerGroup();
+let markersLayer = L.layerGroup();
 
 function initMap() {
     if (!map) {
@@ -316,20 +324,20 @@ async function seedMockData() {
         count++;
     }
     alert(`¡${count} casos de prueba con ubicaciones reales cargados exitosamente!`);
-    fetchAndRender();
 }
 
 // Expose globally
 window.seedMockData = seedMockData;
 
-// Refresh handler
+// Refresh handler (triggers manual re-sync if needed, though onSnapshot is automatic)
 refreshBtn.addEventListener('click', () => {
     if (userProfile.role === 'viewer') return;
-    fetchAndRender();
+    location.reload(); // Simple way to restart listeners
 });
 
-// Logout handler (add to a button later)
+// Logout handler
 window.handleLogout = () => signOut(auth);
+
 searchInput.addEventListener('input', (e) => {
     const val = e.target.value.toLowerCase();
     const rows = tbodyEl.querySelectorAll('tr');
