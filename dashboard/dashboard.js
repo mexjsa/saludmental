@@ -4,7 +4,7 @@ import { collection, query, orderBy, getDocs, limit } from "https://www.gstatic.
 const CHAT_LOG_COLLECTION = "conasama_responses";
 
 // Chart & Map instances
-let timelineChart, map, activeUsersChart;
+let map, activeUsersChart;
 
 const MOCK_COORDS = {
     'CDMX': [19.4326, -99.1332],
@@ -37,7 +37,6 @@ async function fetchAndRender() {
 
         renderOverview(data);
         renderActiveUsers();
-        renderTimeline(data);
         renderMap(data);
         renderTable(data);
     } catch (error) {
@@ -124,51 +123,7 @@ function renderMap(data) {
     });
 }
 
-function renderTimeline(data) {
-    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
-    
-    const timeLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S']; // Donezo style labels
-    const interactData = [12, 19, 15, 25, 22, 30, data.length];
 
-    if (timelineChart) timelineChart.destroy();
-    
-    timelineChart = new Chart(timelineCtx, {
-        type: 'bar',
-        data: {
-            labels: timeLabels,
-            datasets: [{
-                label: 'Interacciones',
-                data: interactData,
-                backgroundColor: (context) => {
-                    const index = context.dataIndex;
-                    return index === 3 ? '#1d4d3a' : '#3bb55d88'; // Highlight Wednesday as in Ref
-                },
-                borderRadius: 20,
-                barThickness: 35
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            layout: {
-                padding: { bottom: 25, top: 10, left: 10, right: 10 }
-            },
-            scales: {
-                y: { display: false },
-                x: { 
-                    grid: { display: false },
-                    border: { display: false },
-                    ticks: { 
-                        color: '#94a3b8', 
-                        font: { size: 12, weight: 'bold' },
-                        padding: 10
-                    }
-                }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-}
 
 function renderTable(data) {
     tbodyEl.innerHTML = '';
