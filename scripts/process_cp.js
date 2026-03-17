@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-const SEPOMEX_PATH = 'C:\\Users\\Juan\\Dropbox\\Proyectos 2026\\CONASAMA CHATBOT\\CPdescarga.txt';
-const COORDS_PATH = 'C:\\Users\\Juan\\Dropbox\\Proyectos 2026\\CONASAMA CHATBOT\\cp lat long.txt';
+const SEPOMEX_PATH = 'C:\\Users\\Juan\\Dropbox\\Proyectos 2026\\SECRETARIA DE SALUD CHATBOT\\CPdescarga.txt';
+const COORDS_PATH = 'C:\\Users\\Juan\\Dropbox\\Proyectos 2026\\SECRETARIA DE SALUD CHATBOT\\cp lat long.txt';
 const OUTPUT_DIR = './public/api/cp';
 
 if (!fs.existsSync(OUTPUT_DIR)) {
