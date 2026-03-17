@@ -95,7 +95,7 @@ if (btnCreateAdmin) {
 }
 async function fetchAndRender() {
     console.log("Setting up real-time listener for role:", userProfile.role);
-    const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(200));
+    const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(500));
     
     onSnapshot(q, (querySnapshot) => {
         let data = [];
