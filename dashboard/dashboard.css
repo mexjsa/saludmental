@@ -169,9 +169,8 @@ body.light-theme {
     padding: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    height: 100vh;
-    overflow-y: auto;
+    gap: 2rem;
+    overflow-y: visible; /* Allow natural flow */
     background-color: var(--bg-light);
 }
 
@@ -179,9 +178,8 @@ body.light-theme {
     background: white;
     border-radius: 20px;
     border: 1px solid var(--glass-border);
-    padding: 1.5rem;
+    padding: 2rem;
     box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-    flex-shrink: 0;
 }
 
 .map-header {
@@ -219,12 +217,13 @@ body.light-theme {
 
 /* Timeline/Interactive Chart */
 .timeline-wrapper { 
-    height: 250px; 
+    height: 320px; 
     display: flex; 
     flex-direction: column; 
-    padding-bottom: 2rem; /* Give space for axis */
+    padding: 1.5rem;
+    padding-bottom: 3rem; /* Extra space for axis labels */
 }
-.timeline-header h3 { font-size: 1rem; margin-bottom: 1rem; font-weight: 700; }
+.timeline-header h3 { font-size: 1rem; margin-bottom: 1.5rem; font-weight: 700; }
 
 /* Footer Table */
 .table-section-footer {

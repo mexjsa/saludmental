@@ -144,21 +144,25 @@ function renderTimeline(data) {
                     return index === 3 ? '#1d4d3a' : '#3bb55d88'; // Highlight Wednesday as in Ref
                 },
                 borderRadius: 20,
-                barThickness: 30
+                barThickness: 35
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             layout: {
-                padding: { bottom: 10 }
+                padding: { bottom: 25, top: 10, left: 10, right: 10 }
             },
             scales: {
                 y: { display: false },
                 x: { 
                     grid: { display: false },
                     border: { display: false },
-                    ticks: { color: '#94a3b8', font: { weight: 'bold' } }
+                    ticks: { 
+                        color: '#94a3b8', 
+                        font: { size: 12, weight: 'bold' },
+                        padding: 10
+                    }
                 }
             },
             plugins: { legend: { display: false } }
