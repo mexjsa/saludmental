@@ -35,6 +35,7 @@ let userData = {
     municipio: '',
     municipality: '',
     colonia: '',
+    coords: null, // {lat, lon}
     k10Score: 0,
     phq9Score: 0,
     suicideFlag: false,
@@ -112,7 +113,11 @@ const FLOW = {
         messages: ["¡Entendido! ¿Conoces tu código postal? Si no pasa nada 😊, también puedes decirme en qué estado vives."],
         options: [
             { text: "Sí, lo conozco", nextPhase: 'INPUT_CP' },
-            { text: "No, mejor el estado", nextPhase: 'INPUT_STATE' }
+            { text: "No, mejor el estado", nextPhase: 'INPUT_STATE' },
+            { text: "Saltar ubicación", action: () => {
+                userData.tipo_ubicacion = 'saltado';
+                startPhase('EMERGENCY_CONTACT');
+            }}
         ]
     },
     INPUT_CP: {
@@ -127,6 +132,7 @@ const FLOW = {
                 userData.municipio = data.municipio;
                 userData.municipality = data.municipio;
                 userData.tempColonias = data.colonias;
+                userData.coords = data.coords || null;
                 startPhase('CONFIRM_CP');
             } else {
                 addMessage("Ese código postal no parece correcto o no lo encontré. Revísalo e intenta de nuevo 😊", 'bot');
@@ -151,7 +157,6 @@ const FLOW = {
     },
     SELECT_COLONY: {
         messages: ["¿En qué colonia te encuentras?"],
-        options: [], 
         onEnter: () => {
             const opts = userData.tempColonias.map(c => ({
                 text: c,
@@ -162,6 +167,16 @@ const FLOW = {
                     startPhase('EMERGENCY_CONTACT');
                 }
             }));
+            // Add skip option
+            opts.push({
+                text: "No deseo especificar",
+                action: () => {
+                    userData.colonia = 'No especificada';
+                    userData.tipo_ubicacion = 'cp';
+                    addMessage("No deseo especificar", 'user');
+                    startPhase('EMERGENCY_CONTACT');
+                }
+            });
             renderOptions(opts, (opt) => opt.action());
         }
     },
@@ -285,10 +300,6 @@ async function startPhase(phaseName) {
         return;
     }
 
-    if (phase.onEnter) {
-        phase.onEnter();
-    }
-
     if (phase.action) {
         phase.action();
         return;
@@ -297,6 +308,10 @@ async function startPhase(phaseName) {
     if (phase.messages) {
         const msgs = getPhaseMessages(phaseName);
         await botSpeak(msgs);
+    }
+
+    if (phase.onEnter) {
+        phase.onEnter();
     }
 
     if (phase.questions) {

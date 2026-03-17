@@ -192,7 +192,15 @@ function renderMap(data) {
 
     // Clear and redraw markers
     data.forEach(d => {
-        if (d.state && MOCK_COORDS[d.state]) {
+        let lat, lon;
+        if (d.coords && d.coords.lat && d.coords.lon) {
+            lat = d.coords.lat;
+            lon = d.coords.lon;
+        } else if (d.state && MOCK_COORDS[d.state]) {
+            [lat, lon] = MOCK_COORDS[d.state];
+        }
+
+        if (lat && lon) {
             let markerColor = '#10b981'; // Green (Normal)
             let riskLabel = 'Normal';
 
@@ -204,7 +212,7 @@ function renderMap(data) {
                 riskLabel = 'Alto Riesgo';
             }
             
-            L.circleMarker(MOCK_COORDS[d.state], {
+            L.circleMarker([lat, lon], {
                 radius: 12,
                 fillColor: markerColor,
                 color: '#fff',
@@ -212,7 +220,7 @@ function renderMap(data) {
                 opacity: 1,
                 fillOpacity: 0.9
             }).addTo(map)
-              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}`);
+              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}<br>${d.municipio || d.municipality || ''}, ${d.estado || d.state || ''}`);
         }
     });
 }
@@ -279,6 +287,10 @@ async function seedMockData() {
             k10Score: k10,
             phq9Score: phq,
             suicideFlag: suicide,
+            coords: {
+                lat: 14.5 + Math.random() * 18,
+                lon: -117.1 + Math.random() * 30
+            },
             source: 'test_seed',
             timestamp: serverTimestamp()
         });

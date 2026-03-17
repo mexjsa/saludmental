@@ -1,21 +1,38 @@
 import fs from 'fs';
 import path from 'path';
 
-const INPUT_PATH = 'C:\\Users\\Juan\\Dropbox\\Proyectos 2026\\CONASAMA CHATBOT\\CPdescarga.txt';
+const SEPOMEX_PATH = 'C:\\Users\\Juan\\Dropbox\\Proyectos 2026\\CONASAMA CHATBOT\\CPdescarga.txt';
+const COORDS_PATH = 'C:\\Users\\Juan\\Dropbox\\Proyectos 2026\\CONASAMA CHATBOT\\cp lat long.txt';
 const OUTPUT_DIR = './public/api/cp';
 
 if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-console.log("Reading file (using latin1 for accents)...");
-const data = fs.readFileSync(INPUT_PATH, 'latin1');
+console.log("Reading coordinates file...");
+const coordsData = fs.readFileSync(COORDS_PATH, 'latin1');
+const coordsLines = coordsData.split('\n');
+const coordsMap = {};
+
+coordsLines.forEach(line => {
+    const parts = line.split('|');
+    if (parts.length >= 6) {
+        const cp = parts[0].trim();
+        const lat = parseFloat(parts[4]);
+        const lon = parseFloat(parts[5]);
+        if (!isNaN(lat) && !isNaN(lon)) {
+            coordsMap[cp] = { lat, lon };
+        }
+    }
+});
+
+console.log("Reading SEPOMEX file...");
+const data = fs.readFileSync(SEPOMEX_PATH, 'latin1');
 const lines = data.split('\n');
 
 const cpMap = {};
 
 console.log("Parsing lines...");
-// Skip first 2 lines (header)
 for (let i = 2; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
@@ -33,13 +50,14 @@ for (let i = 2; i < lines.length; i++) {
             cp: cp,
             estado: estado,
             municipio: municipio,
-            colonias: []
+            colonias: [],
+            coords: coordsMap[cp] || null
         };
     }
     cpMap[cp].colonias.push(colonia);
 }
 
-console.log("Grouping by prefix (first 3 digits)...");
+console.log("Grouping by prefix...");
 const prefixes = {};
 Object.values(cpMap).forEach(item => {
     const prefix = item.cp.substring(0, 3);
@@ -52,4 +70,4 @@ Object.entries(prefixes).forEach(([prefix, data]) => {
     fs.writeFileSync(path.join(OUTPUT_DIR, `${prefix}.json`), JSON.stringify(data));
 });
 
-console.log("Done! Processed", Object.keys(cpMap).length, "unique postal codes.");
+console.log("Done! Processed", Object.keys(cpMap).length, "postal codes with coordinates.");
