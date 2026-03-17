@@ -52,12 +52,44 @@ async function checkPermissions(uid) {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
         userProfile = docSnap.data();
+        updateNavProfile();
         initDashboard();
     } else {
         alert("Acceso no autorizado. Contacte al administrador maestro.");
         signOut(auth);
     }
 }
+
+function updateNavProfile() {
+    const navName = document.getElementById('nav-user-name');
+    const navRole = document.getElementById('nav-user-role');
+    const navAvatar = document.getElementById('nav-avatar');
+    const navDate = document.getElementById('nav-date');
+    const navCity = document.getElementById('nav-city');
+
+    if (userProfile) {
+        navName.innerText = userProfile.name || currentUser.email.split('@')[0].toUpperCase();
+        navRole.innerText = userProfile.role === 'master' ? 'Administrador Maestro' : 
+                          userProfile.role === 'PS' ? 'Psicólogo Especialista' :
+                          userProfile.role === 'TS' ? 'Trabajador Social' : 'Consultor';
+        
+        if (userProfile.avatarUrl) {
+            navAvatar.src = userProfile.avatarUrl;
+        }
+    }
+
+    // Set Date
+    const now = new Date();
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    navDate.innerText = now.toLocaleDateString('es-ES', options);
+
+    // City Mock (could be dynamic)
+    navCity.innerText = "CDMX, México";
+}
+
+document.getElementById('btn-print-report')?.addEventListener('click', () => {
+    window.print();
+});
 
 function initDashboard() {
     initMap();

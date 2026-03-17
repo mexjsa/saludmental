@@ -92,8 +92,39 @@
         <!-- Main Center Area (Map & Timeline) -->
         <section class="main-visualization">
             <header class="main-header">
-                <div class="main-title">
-                    <h1>CONASAMA | <span>Monitor de salud mental</span></h1>
+                <div class="main-title-stacked">
+                    <span class="subtitle">Monitor de Salud Mental</span>
+                    <h1 class="title">Dashboard <span>CONASAMA</span></h1>
+                </div>
+
+                <div class="user-profile-nav">
+                    <div class="nav-info-group">
+                        <span class="current-city" id="nav-city">CDMX, México</span>
+                        <span class="current-date" id="nav-date">17 Mar, 2026</span>
+                    </div>
+                    
+                    <div class="nav-actions">
+                        <button class="nav-btn" title="Herramientas y Reportes" id="btn-print-report">
+                            <span class="btn-icon">🛠️</span>
+                        </button>
+                        <div class="notification-wrapper">
+                            <button class="nav-btn" title="Notificaciones">
+                                <span class="btn-icon">🔔</span>
+                                <span class="notification-badge">3</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="user-identity">
+                        <div class="user-text">
+                            <span class="user-name" id="nav-user-name">Usuario Admin</span>
+                            <span class="user-role" id="nav-user-role">Operador Técnico</span>
+                        </div>
+                        <div class="user-avatar-wrapper">
+                            <img src="https://i.pravatar.cc/150?u=admin" alt="Perfil" class="user-avatar" id="nav-avatar">
+                            <div class="status-dot"></div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
