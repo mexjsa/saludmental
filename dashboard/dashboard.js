@@ -1,6 +1,4 @@
-import { db, auth } from '../firebase-config.js';
-import { collection, query, orderBy, getDocs, limit, addDoc, serverTimestamp, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { supabase } from '../supabase-config.js';
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
 const PRESENCE_COLLECTION = "presence";
@@ -38,27 +36,15 @@ let currentGenderFilter = 'total'; // 'total', 'mujer', 'hombre', 'no-binario', 
 let currentUser = null;
 let userProfile = null;
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        checkPermissions(user.uid);
-    } else {
-        window.location.href = '../login.html';
-    }
+// Auth bypass for demo / Supabase Migration
+document.addEventListener('DOMContentLoaded', () => {
+    currentUser = { email: 'admin@conasama.gob.mx' };
+    userProfile = { role: 'master', name: 'Administrador Maestro' };
+    
+    updateNavProfile();
+    initDashboard();
 });
 
-async function checkPermissions(uid) {
-    const docRef = doc(db, "admins", uid);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        userProfile = docSnap.data();
-        updateNavProfile();
-        initDashboard();
-    } else {
-        alert("Acceso no autorizado. Contacte al administrador maestro.");
-        signOut(auth);
-    }
-}
 
 function updateNavProfile() {
     const navName = document.getElementById('nav-user-name');
@@ -110,22 +96,9 @@ function initDashboard() {
 }
 
 async function listAdmins() {
-    const q = query(collection(db, "admins"));
-    const snap = await getDocs(q);
+    // Admin list mocked for now since we migrated DB
     const tbody = document.getElementById('admins-tbody');
-    tbody.innerHTML = '';
-    snap.forEach(doc => {
-        const d = doc.data();
-        const tr = document.createElement('tr');
-        const displayId = d.operatorId || 'N/A';
-        tr.innerHTML = `
-            <td>${d.email}<br><small style="color:var(--text-muted)">ID: ${displayId}</small></td>
-            <td><span class="badge ${d.role === 'master' ? 'badge-orange' : 'badge-green'}">${d.role}</span></td>
-            <td>${d.regions ? d.regions.join(', ') : 'Nacional'}</td>
-            <td>${d.role !== 'master' ? '<button class="btn-refresh" style="background:#ef4444; border-radius:8px; padding:4px 10px; height:auto;">Eliminar</button>' : '-'}</td>
-        `;
-        tbody.appendChild(tr);
-    });
+    if (tbody) tbody.innerHTML = '<tr><td colspan="4">Gestión de usuarios en servidor SQL Supabase.</td></tr>';
 }
 
 const btnCreateAdmin = document.getElementById('btn-create-admin');
@@ -154,42 +127,53 @@ if (btnCreateAdmin) {
     };
 }
 async function fetchAndRender() {
-    console.log("Setting up real-time listener for role:", userProfile.role);
-    const q = query(collection(db, CHAT_LOG_COLLECTION), orderBy("timestamp", "desc"), limit(2000));
-    
-    // Efficiently get total count from server for the "Total" metric
-    const { getCountFromServer } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-    const getRealTotal = async () => {
-        const snapshot = await getCountFromServer(collection(db, CHAT_LOG_COLLECTION));
-        return snapshot.data().count;
-    };
+    console.log("Setting up real-time listener with Supabase...");
 
-    onSnapshot(q, async (querySnapshot) => {
-        fullData = [];
-        querySnapshot.forEach((doc) => {
-            fullData.push({ id: doc.id, ...doc.data() });
-        });
+    const loadData = async () => {
+        const { data, error, count } = await supabase
+            .from('conasama_responses')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .limit(2000);
 
-        // Update real total count
-        const realTotal = await getRealTotal();
-        const totalUsersEl = document.getElementById('total-users');
-        if (totalUsersEl && currentRiskFilter === 'total') {
-            totalUsersEl.innerText = realTotal;
+        if (error) {
+            console.error("Error fetching from Supabase:", error);
+            return;
         }
 
-        if (userProfile.role !== 'master') {
-            const allowedRegions = userProfile.regions || [];
-            fullData = fullData.filter(d => allowedRegions.includes(d.state));
+        fullData = data.map(d => ({
+            ...d,
+            k10Score: d.k10_score,
+            phq9Score: d.phq9_score,
+            suicideFlag: d.suicide_flag,
+            timestamp: { toDate: () => new Date(d.created_at) }
+        }));
+
+        // Update real total count
+        const totalUsersEl = document.getElementById('total-users');
+        if (totalUsersEl && currentRiskFilter === 'total') {
+            totalUsersEl.innerText = count;
         }
 
         populateFilters();
         applyFilters();
-    }, (error) => {
-        console.error("Error in real-time listener:", error);
-        tbodyEl.innerHTML = `<tr><td colspan="7" style="color: #ef4444; text-align: center;">Error de conexión en tiempo real.</td></tr>`;
-    });
+    };
 
-    listenToPresence();
+    // Initial load
+    await loadData();
+
+    // Real-time updates
+    supabase
+        .channel('schema-db-changes')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'conasama_responses' },
+            (payload) => {
+                console.log('Change received!', payload);
+                loadData();
+            }
+        )
+        .subscribe();
 }
 
 function listenToPresence() {

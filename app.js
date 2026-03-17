@@ -1,6 +1,4 @@
-// CONASAMA Chatbot Core Logic
-import { db } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { supabase } from './supabase-config.js';
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
 const PRESENCE_COLLECTION = "presence";
@@ -496,23 +494,18 @@ function terminateChat(farewell) {
 
 // --- Results & Scoring ---
 
-const isFirebaseConfigured = () => {
-    return typeof db !== 'undefined' && db && !db._databaseId.projectId.includes("tu-proyecto");
-};
-
 async function saveResult(data) {
-    if (!isFirebaseConfigured()) {
-        console.warn("⚠️ Firebase no configurado. El resultado se mostrará solo en consola.");
-        console.log("Datos del Lead (Mock):", data);
-        return;
-    }
     try {
-        await addDoc(collection(db, CHAT_LOG_COLLECTION), {
-            ...data,
-            timestamp: serverTimestamp()
-        });
+        const { error } = await supabase
+            .from('conasama_responses')
+            .insert([{
+                ...data,
+                source: 'production'
+            }]);
+        if (error) throw error;
+        console.log("Chat log saved successfully to Supabase");
     } catch (e) {
-        console.error("Error al guardar en Firebase:", e);
+        console.error("Error saving chat log to Supabase:", e);
     }
 }
 
@@ -521,18 +514,29 @@ async function calculateFinalResults() {
     showTypingIndicator();
     updateProgress(100);
 
-    // Save to Firebase ONLY if configured
-    if (isFirebaseConfigured()) {
-        try {
-            await addDoc(collection(db, CHAT_LOG_COLLECTION), {
-                ...userData,
-                source: 'production',
-                timestamp: serverTimestamp()
-            });
-        } catch (e) { console.error("Error saving results:", e); }
-    } else {
-        console.warn("⚠️ Firebase no configurado. Saltando persistencia para evitar block.");
-        console.log("Resultados (Local):", userData);
+    // Save to Supabase
+    try {
+        const { error } = await supabase
+            .from('conasama_responses')
+            .insert([{
+                name: userData.name,
+                age_range: userData.ageRange,
+                gender: userData.gender,
+                tipo_ubicacion: userData.tipo_ubicacion,
+                codigo_postal: userData.codigo_postal,
+                estado: userData.estado,
+                municipio: userData.municipio,
+                colonia: userData.colonia,
+                coords: userData.coords,
+                k10_score: userData.k10Score,
+                phq9_score: userData.phq9Score,
+                suicide_flag: userData.suicideFlag,
+                source: 'production'
+            }]);
+        if (error) throw error;
+        console.log("Final results saved to Supabase");
+    } catch (e) {
+        console.error("Error saving final results:", e);
     }
 
     await new Promise(r => setTimeout(r, 1000));

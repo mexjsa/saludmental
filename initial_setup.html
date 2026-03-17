@@ -2,68 +2,45 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Configuración Inicial CONASAMA</title>
+    <title>Configuración Inicial CONASAMA (Supabase)</title>
     <style>
         body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
         .success { color: green; font-weight: bold; }
         .error { color: red; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <h1>🚀 Configuración Inicial del Sistema</h1>
-    <button id="btn-clear" style="padding: 10px; background: #ef4444; color: white; border: none; cursor: pointer;">🗑️ BORRAR DATOS DE PRUEBA ANTERIORES</button>
+    <h1>🚀 Configuración Inicial (Migración Supabase)</h1>
+    <button id="btn-clear" style="padding: 10px; background: #ef4444; color: white; border: none; cursor: pointer;">🗑️ BORRAR DATOS EN SUPABASE</button>
     <div id="status">Iniciando procesos...</div>
 
     <script type="module">
-        import { db, auth } from './firebase-config.js';
-        import { collection, addDoc, serverTimestamp, doc, setDoc, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { supabase } from './supabase-config.js';
 
         const status = document.getElementById('status');
         const btnClear = document.getElementById('btn-clear');
 
         btnClear.onclick = async () => {
-            if (!confirm("¿Seguro que quieres borrar todos los casos de prueba?")) return;
-            status.innerHTML = "🗑️ Borrando datos antiguos (esto puede tardar si hay muchos)...";
+            if (!confirm("¿Seguro que quieres borrar todos los casos de prueba en Supabase?")) return;
+            status.innerHTML = "🗑️ Borrando datos antigos en Supabase...";
             
-            let count = 0;
-            while(true) {
-                const q = query(collection(db, "conasama_responses"), where("source", "==", "test_seed"), limit(500));
-                const snap = await getDocs(q);
-                if (snap.empty) break;
-                
-                for (const d of snap.docs) {
-                    await deleteDoc(doc(db, "conasama_responses", d.id));
-                    count++;
-                }
-                status.innerHTML = `🗑️ Borrados ${count} registros...`;
+            const { error } = await supabase
+                .from('conasama_responses')
+                .delete()
+                .eq('source', 'test_seed');
+            
+            if (error) {
+                status.innerHTML = `<span class="error">❌ ERROR: ${error.message}</span>`;
+            } else {
+                status.innerHTML = "✅ Datos de prueba borrados de Supabase. Recargando...";
+                setTimeout(() => location.reload(), 1500);
             }
-            
-            status.innerHTML = `✅ ${count} registros borrados. Recargando...`;
-            setTimeout(() => location.reload(), 2000);
         };
 
         async function runSetup() {
             try {
-                // 1. Crear Admin Maestro
-                try {
-                    status.innerHTML += "<br>Creando/Verificando Admin Maestro (admin@conasama.gob.mx)...";
-                    const userCredential = await createUserWithEmailAndPassword(auth, "admin@conasama.gob.mx", "Conasama2026!");
-                    const uid = userCredential.user.uid;
-
-                    await setDoc(doc(db, "admins", uid), {
-                        email: "admin@conasama.gob.mx",
-                        role: "master",
-                        name: "Administrador Maestro",
-                        regions: ["CDMX", "EDOMEX", "JAL"]
-                    });
-                    status.innerHTML += ' <span class="success">✓ CREADO</span>';
-                } catch (e) {
-                    status.innerHTML += ' <span style="color: orange;">✓ YA EXISTE</span>';
-                }
-
-                // 2. Cargar 50 casos de prueba con DATOS REALES
-                status.innerHTML += "<br>Cargando 50 casos de prueba con GEOLOCALIZACIÓN REAL...";
+                status.innerHTML = "Cargando 50 casos de prueba en Supabase...";
                 const names = ["Juan", "Maria", "Carlos", "Ana", "Luis", "Elena", "Pedro", "Sofia", "Miguel", "Lucia"];
                 const ages = ["12-14", "15-17", "18-21", "22-25", "26-29"];
                 const genders = ["mujer", "hombre", "no-binario", "otro"];
@@ -80,6 +57,7 @@
                     } catch (e) { return null; }
                 }
 
+                const testData = [];
                 for (let i = 0; i < 50; i++) {
                     const cpData = await getRandomCP();
                     if (!cpData) continue;
@@ -87,33 +65,34 @@
                     const suicide = Math.random() > 0.85;
                     const k10 = suicide ? (Math.floor(Math.random() * 21) + 30) : (Math.floor(Math.random() * 41) + 10);
                     let phq = 0;
-                    if (suicide) {
-                        phq = 24;
-                    } else {
-                        phq = Math.floor(Math.random() * 25);
-                    }
+                    if (suicide) phq = 24;
+                    else phq = Math.floor(Math.random() * 25);
 
-                    await addDoc(collection(db, "conasama_responses"), {
-                        name: names[Math.floor(Math.random() * names.length)] + " (P)",
-                        ageRange: ages[Math.floor(Math.random() * ages.length)],
+                    testData.push({
+                        name: names[Math.floor(Math.random() * names.length)] + " (S)",
+                        age_range: ages[Math.floor(Math.random() * ages.length)],
                         gender: genders[Math.floor(Math.random() * genders.length)],
-                        state: cpData.estado,
                         estado: cpData.estado,
-                        municipality: cpData.municipio,
                         municipio: cpData.municipio,
                         codigo_postal: cpData.cp,
                         colonia: cpData.colonias[0],
                         tipo_ubicacion: 'cp',
-                        k10Score: k10,
-                        phq9Score: phq,
-                        suicideFlag: suicide,
+                        k10_score: k10,
+                        phq9_score: phq,
+                        suicide_flag: suicide,
                         coords: cpData.coords,
-                        source: 'test_seed',
-                        timestamp: serverTimestamp()
+                        source: 'test_seed'
                     });
                 }
-                status.innerHTML += ' <span class="success">✓ CARGADOS</span>';
-                status.innerHTML += "<br><br><b>¡PROCESO COMPLETADO!</b> Ya puedes entrar al Dashboard.";
+
+                const { error } = await supabase
+                    .from('conasama_responses')
+                    .insert(testData);
+
+                if (error) throw error;
+                
+                status.innerHTML = ' <span class="success">✓ 50 CASOS CARGADOS EN SUPABASE</span>';
+                status.innerHTML += "<br><br><b>¡MIGRACIÓN COMPLETADA!</b> Ya puedes entrar al Dashboard.";
                 
             } catch (err) {
                 status.innerHTML += ` <span class="error">❌ ERROR: ${err.message}</span>`;
