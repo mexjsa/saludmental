@@ -398,6 +398,7 @@ async function calculateFinalResults() {
         try {
             await addDoc(collection(db, CHAT_LOG_COLLECTION), {
                 ...userData,
+                source: 'production',
                 timestamp: serverTimestamp()
             });
         } catch (e) { console.error("Error saving results:", e); }

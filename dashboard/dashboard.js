@@ -1,5 +1,5 @@
 import { db } from '../firebase-config.js';
-import { collection, query, orderBy, getDocs, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { collection, query, orderBy, getDocs, limit, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const CHAT_LOG_COLLECTION = "conasama_responses";
 
@@ -141,9 +141,10 @@ function renderTable(data) {
         const statusText = d.suicideFlag ? 'ALERTA ROJA' : (d.phq9Score >= 5 || d.k10Score >= 15) ? 'Riesgo Alto' : 'Normal';
 
         const tr = document.createElement('tr');
+        const isTest = d.source === 'test_seed';
         tr.innerHTML = `
             <td>${time}</td>
-            <td style="font-weight: 600;">${d.name}</td>
+            <td style="font-weight: 600;">${d.name} ${isTest ? '<span class="badge" style="background:#e2e8f0; color:#64748b; font-size:0.6rem;">PRUEBA</span>' : ''}</td>
             <td>${d.municipality || ''}, ${d.state || '-'}</td>
             <td>${d.k10Score || 0}</td>
             <td>${d.phq9Score || 0}</td>
@@ -152,6 +153,44 @@ function renderTable(data) {
         tbodyEl.appendChild(tr);
     });
 }
+
+// Seeding logic for the 50 test cases
+async function seedMockData() {
+    console.log("Seeding 50 test cases...");
+    const names = ["Juan", "Maria", "Carlos", "Ana", "Luis", "Elena", "Pedro", "Sofia", "Miguel", "Lucia"];
+    const states = ["CDMX", "EDOMEX", "JAL"];
+    const municipalities = {
+        "CDMX": ["Iztapalapa", "Benito Juarez", "Coyoacan"],
+        "EDOMEX": ["Ecatepec", "Toluca", "Naucalpan"],
+        "JAL": ["Guadalajara", "Zapopan", "Tlaquepaque"]
+    };
+
+    for (let i = 0; i < 50; i++) {
+        const state = states[Math.floor(Math.random() * states.length)];
+        const mun = municipalities[state][Math.floor(Math.random() * municipalities[state].length)];
+        const k10 = Math.floor(Math.random() * 25) + 5;
+        const phq = Math.floor(Math.random() * 9);
+        const suicide = Math.random() > 0.9;
+
+        await addDoc(collection(db, CHAT_LOG_COLLECTION), {
+            name: names[Math.floor(Math.random() * names.length)] + " (Test)",
+            ageRange: "18-21",
+            gender: "otro",
+            state: state,
+            municipality: mun,
+            k10Score: k10,
+            phq9Score: phq,
+            suicideFlag: suicide,
+            source: 'test_seed',
+            timestamp: serverTimestamp()
+        });
+    }
+    alert("¡50 casos de prueba precargados exitosamente!");
+    fetchAndRender();
+}
+
+// Expose globally
+window.seedMockData = seedMockData;
 
 // Refresh handler
 refreshBtn.addEventListener('click', fetchAndRender);
