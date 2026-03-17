@@ -208,6 +208,23 @@ body.light-theme {
     gap: 0.4rem;
     font-size: 0.8rem;
     font-weight: 700;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.gender-item:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.gender-item.active {
+    background: var(--accent);
+    color: white;
+}
+
+.gender-item.active .gender-count {
+    color: white;
 }
 
 .gender-icon { font-size: 1rem; }

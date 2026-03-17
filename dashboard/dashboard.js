@@ -26,10 +26,13 @@ const muniFilter = document.getElementById('filter-municipality');
 const geoSearchInput = document.getElementById('search-geo');
 const womenCountEl = document.getElementById('total-women');
 const menCountEl = document.getElementById('total-men');
+const nbCountEl = document.getElementById('total-nb');
+const otherCountEl = document.getElementById('total-other');
 
 let fullData = [];
 let filteredData = [];
 let currentRiskFilter = 'total'; // 'total', 'red', 'orange', 'green'
+let currentGenderFilter = 'total'; // 'total', 'mujer', 'hombre', 'no-binario', 'otro'
 
 // Auth & Role State
 let currentUser = null;
@@ -157,6 +160,8 @@ function renderOverview(data) {
 
     const women = data.filter(d => (d.gender || '').toLowerCase() === 'mujer').length;
     const men = data.filter(d => (d.gender || '').toLowerCase() === 'hombre').length;
+    const nb = data.filter(d => (d.gender || '').toLowerCase() === 'no-binario').length;
+    const other = data.filter(d => (d.gender || '').toLowerCase() === 'otro').length;
 
     totalUsersEl.innerText = total;
     totalEmergenciesEl.innerText = emergencies;
@@ -165,6 +170,8 @@ function renderOverview(data) {
     
     if (womenCountEl) womenCountEl.innerText = women;
     if (menCountEl) menCountEl.innerText = men;
+    if (nbCountEl) nbCountEl.innerText = nb;
+    if (otherCountEl) otherCountEl.innerText = other;
 }
 
 function renderActiveUsers(count = 0) {
@@ -271,7 +278,12 @@ function applyFilters() {
         else if (currentRiskFilter === 'orange') matchesRisk = !d.suicideFlag && (d.phq9Score >= 5 || d.k10Score >= 15);
         else if (currentRiskFilter === 'green') matchesRisk = !d.suicideFlag && d.phq9Score < 5 && d.k10Score < 15;
 
-        return matchesName && matchesState && matchesMuni && matchesGeo && matchesRisk;
+        let matchesGender = true;
+        if (currentGenderFilter !== 'total') {
+            matchesGender = (d.gender || '').toLowerCase() === currentGenderFilter;
+        }
+
+        return matchesName && matchesState && matchesMuni && matchesGeo && matchesRisk && matchesGender;
     });
 
     renderOverview(filteredData);
@@ -478,6 +490,28 @@ document.querySelectorAll('.filter-card').forEach(card => {
         document.querySelectorAll('.filter-card').forEach(c => c.classList.remove('active'));
         if (currentRiskFilter !== 'total') {
             card.classList.add('active');
+        }
+
+        applyFilters();
+    });
+});
+
+// Gender Item Filtering
+document.querySelectorAll('.filter-gender').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering the parent card click
+        const gender = item.getAttribute('data-gender');
+        
+        if (currentGenderFilter === gender) {
+            currentGenderFilter = 'total';
+        } else {
+            currentGenderFilter = gender;
+        }
+
+        // Update UI
+        document.querySelectorAll('.filter-gender').forEach(i => i.classList.remove('active'));
+        if (currentGenderFilter !== 'total') {
+            item.classList.add('active');
         }
 
         applyFilters();
