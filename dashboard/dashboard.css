@@ -27,15 +27,63 @@ body.light-theme {
 
 /* Sidebar Styling */
 .sidebar-metrics {
-    background: var(--sidebar-bg);
-    border-right: 1px solid var(--glass-border);
+    background: white;
     padding: 2rem;
+    border-right: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    overflow-y: auto;
     box-shadow: 10px 0 30px rgba(0,0,0,0.02);
     z-index: 10;
 }
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.header-logo { height: 45px; }
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 2rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.btn-logout {
+    width: 100%;
+    padding: 0.8rem;
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-logout:hover { background: #fecaca; }
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.main-title h1 { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+.main-title h1 span { font-weight: 400; color: #64748b; font-size: 1rem; }
+
+.main-search input {
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    width: 250px;
+    font-family: inherit;
+    transition: width 0.3s;
+}
+.main-search input:focus { width: 320px; outline: none; border-color: var(--accent); }
 
 .nav-logo { height: 40px; }
 .brand-header {
@@ -251,6 +299,27 @@ td { padding: 1rem; font-size: 0.85rem; border-bottom: 1px solid #f8fafc; color:
 .badge-orange { background: #ffedd5; color: #f59e0b; }
 .badge-green { background: #dcfce7; color: #10b981; }
 
+.form-input, .form-select {
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: #f8fafc;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-input { flex: 1; min-width: 200px; }
+
+.admin-controls {
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 16px;
+}
 .btn-refresh {
     background: #000;
     color: #fff;

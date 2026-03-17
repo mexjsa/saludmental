@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrador | CONASAMA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --accent: #1d4d3a;
+            --text: #1e293b;
+        }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .nav-logo { height: 60px; margin-bottom: 1.5rem; }
+        h1 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--text); }
+        p { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; }
+        .form-group { text-align: left; margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; }
+        input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border 0.2s;
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-login:hover { opacity: 0.9; }
+        .error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 1rem; display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA" class="nav-logo">
+        <h1>Acceso Seguro</h1>
+        <p>Panel de Monitoreo de Salud Mental</p>
+        
+        <form id="login-form">
+            <div class="form-group">
+                <label>Correo Electrónico</label>
+                <input type="email" id="email" placeholder="admin@conasama.gob.mx" required>
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn-login">Ingresar al Dashboard</button>
+            <div id="error-msg" class="error-msg">Credenciales inválidas. Intente de nuevo.</div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { auth } from './firebase-config.js';
+        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const form = document.getElementById('login-form');
+        const errorEl = document.getElementById('error-msg');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            errorEl.style.display = 'none';
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.location.href = 'dashboard/index.html';
+            } catch (err) {
+                console.error(err);
+                errorEl.style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>

@@ -20,14 +20,10 @@
     <main class="orion-layout">
         <!-- Sidebar Gauges/Metrics -->
         <aside class="sidebar-metrics">
-            <div class="nav-brand">
-                <div class="brand-header">
-                    <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA" class="nav-logo">
+            <div class="sidebar-header">
+                <img src="https://www.datos.gob.mx/uploads/group/2025-05-19-165211.740585LogoCONASAMApng.png" alt="CONASAMA" class="header-logo">
+                <div class="status-indicator">
                     <span class="live-pill"><span class="pulse"></span> LIVE</span>
-                </div>
-                <div class="brand-text">
-                    <h1>CONASAMA</h1>
-                    <span>Monitor de salud mental reportada por usuarios</span>
                 </div>
             </div>
 
@@ -72,18 +68,29 @@
                     </div>
                 </div>
             </div>
+
+            <div class="sidebar-footer">
+                <button onclick="handleLogout()" class="btn-logout">Cerrar Sesión</button>
+            </div>
         </aside>
 
         <!-- Main Center Area (Map & Timeline) -->
         <section class="main-visualization">
+            <header class="main-header">
+                <div class="main-title">
+                    <h1>CONASAMA | <span>Monitor de salud mental</span></h1>
+                </div>
+                <div class="main-search">
+                    <input type="text" id="search-name" placeholder="Buscar por nombre...">
+                </div>
+            </header>
+
             <div class="map-wrapper glass">
                 <div class="map-header">
                     <h2>Monitoreo Geográfico Nacional</h2>
                 </div>
                 <div id="riskMap" style="height: 55vh; width: 100%;"></div>
             </div>
-
-
 
             <section class="table-section-footer glass">
                 <div class="table-header">
@@ -96,6 +103,8 @@
                             <tr>
                                 <th>Hora</th>
                                 <th>Nombre</th>
+                                <th>Edad</th>
+                                <th>Sexo</th>
                                 <th>Ubicación</th>
                                 <th>K10</th>
                                 <th>PHQ3</th>
@@ -106,6 +115,35 @@
                     </table>
                 </div>
             </section>
+
+            <!-- Admin Management Panel (Master Only) -->
+            <section id="admin-panel" class="glass" style="display: none; margin-top: 2rem;">
+                <div class="table-header">
+                    <h3>Gestión de Administradores</h3>
+                </div>
+                <div class="admin-controls" style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <input type="email" id="new-admin-email" placeholder="Correo del nuevo admin" class="form-input">
+                    <select id="new-admin-role" class="form-select">
+                        <option value="regional">Admin Regional (Edita)</option>
+                        <option value="viewer">Admin de Consulta (Solo ve)</option>
+                    </select>
+                    <input type="text" id="new-admin-regions" placeholder="Regiones (e.g. CDMX, JAL)" class="form-input">
+                    <button id="btn-create-admin" class="btn-option" style="background: var(--accent); color: white;">Crear Acceso</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="admins-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Regiones</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admins-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
         </section>
     </main>
 
@@ -113,5 +151,4 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script type="module" src="dashboard.js"></script>
 </body>
-
 </html>
