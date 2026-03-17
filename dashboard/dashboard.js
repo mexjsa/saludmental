@@ -146,6 +146,9 @@ async function fetchAndRender() {
             k10Score: d.k10_score,
             phq9Score: d.phq9_score,
             suicideFlag: d.suicide_flag,
+            ageRange: d.age_range,
+            // gender should already be mapping if keys match, but let's be safe
+            gender: d.gender,
             timestamp: { toDate: () => new Date(d.created_at) }
         }));
 
@@ -174,21 +177,19 @@ async function fetchAndRender() {
             }
         )
         .subscribe();
+    
+    listenToPresence();
 }
 
 function listenToPresence() {
-    const q = collection(db, PRESENCE_COLLECTION);
-    onSnapshot(q, (snapshot) => {
-        const now = Date.now();
-        let activeCount = 0;
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            if (d.lastActive && (now - d.lastActive.toMillis()) < 120000) { // 2 minutes
-                activeCount++;
-            }
-        });
-        renderActiveUsers(activeCount);
-    });
+    const channel = supabase.channel('online-users');
+    channel
+        .on('presence', { event: 'sync' }, () => {
+            const state = channel.presenceState();
+            const count = Object.keys(state).length;
+            renderActiveUsers(count);
+        })
+        .subscribe();
 }
 
 function renderOverview(data) {

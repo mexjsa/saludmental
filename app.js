@@ -4,18 +4,19 @@ const CHAT_LOG_COLLECTION = "conasama_responses";
 const PRESENCE_COLLECTION = "presence";
 const sessionId = Math.random().toString(36).substring(7);
 
-async function updatePresence() {
-    if (typeof db === 'undefined') return;
-    try {
-        await setDoc(doc(db, PRESENCE_COLLECTION, sessionId), {
-            lastActive: serverTimestamp()
+function startPresence() {
+    const channel = supabase.channel('online-users');
+    channel
+        .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await channel.track({
+                    user: 'user-' + sessionId,
+                    online_at: new Date().toISOString(),
+                });
+            }
         });
-    } catch (e) { console.error("Error updating presence:", e); }
 }
-
-// Start heartbeat
-setInterval(updatePresence, 30000); // every 30s
-updatePresence();
+startPresence();
 
 async function resolveCP(cp) {
     if (!/^\d{5}$/.test(cp)) return null;
@@ -397,6 +398,9 @@ function handleOptionSelect(opt) {
     }
     if (currentPhase === 'AGE') {
         userData.ageRange = opt.value;
+    }
+    if (currentPhase === 'GENDER') {
+        userData.gender = opt.value;
     }
     if (opt.suicideFlag) {
         userData.suicideFlag = true;
