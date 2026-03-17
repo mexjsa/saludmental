@@ -191,7 +191,27 @@ body.light-theme {
 }
 
 .metric-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
-.metric-value { font-size: 2.8rem; font-weight: 800; font-family: 'Outfit', sans-serif; margin-top: 0.5rem; }
+.metric-value { font-size: 2.8rem; font-weight: 800; font-family: 'Outfit', sans-serif; margin-top: 0.5rem; transition: transform 0.3s; }
+
+.gender-mini-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.5);
+    border-radius: 12px;
+}
+
+.gender-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.gender-icon { font-size: 1rem; }
+.gender-count { color: var(--text-main); }
 
 /* Semaphores */
 .semaphore-group {
@@ -228,6 +248,37 @@ body.light-theme {
 
 .sem-label { display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .sem-value { font-size: 1.4rem; font-weight: 800; }
+
+/* Filter Cards */
+.filter-card {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-card.active {
+    border: 2px solid var(--accent);
+    background: #f0fdf4 !important;
+}
+
+.filter-card.active::after {
+    content: 'FIILTRANDO';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 10px;
+    background: var(--accent);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 50px;
+    font-weight: 800;
+}
 
 /* Main Section */
 .main-visualization {

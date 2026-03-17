@@ -24,9 +24,12 @@ const searchInput = document.getElementById('search-name');
 const stateFilter = document.getElementById('filter-state');
 const muniFilter = document.getElementById('filter-municipality');
 const geoSearchInput = document.getElementById('search-geo');
+const womenCountEl = document.getElementById('total-women');
+const menCountEl = document.getElementById('total-men');
 
 let fullData = [];
 let filteredData = [];
+let currentRiskFilter = 'total'; // 'total', 'red', 'orange', 'green'
 
 // Auth & Role State
 let currentUser = null;
@@ -152,10 +155,16 @@ function renderOverview(data) {
     const attention = data.filter(d => !d.suicideFlag && (d.phq9Score >= 5 || d.k10Score >= 15)).length;
     const leve = total - emergencies - attention;
 
+    const women = data.filter(d => (d.gender || '').toLowerCase() === 'mujer').length;
+    const men = data.filter(d => (d.gender || '').toLowerCase() === 'hombre').length;
+
     totalUsersEl.innerText = total;
     totalEmergenciesEl.innerText = emergencies;
     totalAttentionEl.innerText = attention;
     totalLeveEl.innerText = leve;
+    
+    if (womenCountEl) womenCountEl.innerText = women;
+    if (menCountEl) menCountEl.innerText = men;
 }
 
 function renderActiveUsers(count = 0) {
@@ -255,10 +264,14 @@ function applyFilters() {
         const matchesName = (d.name || '').toLowerCase().includes(nameVal);
         const matchesState = !stateVal || (d.state || d.estado) === stateVal;
         const matchesMuni = !muniVal || (d.municipio || d.municipality) === muniVal;
-        const matchesGeo = !geoVal || 
-            (d.codigo_postal || '').toLowerCase().includes(geoVal);
+        const matchesGeo = !geoVal || (d.codigo_postal || '').toLowerCase().includes(geoVal);
         
-        return matchesName && matchesState && matchesMuni && matchesGeo;
+        let matchesRisk = true;
+        if (currentRiskFilter === 'red') matchesRisk = d.suicideFlag;
+        else if (currentRiskFilter === 'orange') matchesRisk = !d.suicideFlag && (d.phq9Score >= 5 || d.k10Score >= 15);
+        else if (currentRiskFilter === 'green') matchesRisk = !d.suicideFlag && d.phq9Score < 5 && d.k10Score < 15;
+
+        return matchesName && matchesState && matchesMuni && matchesGeo && matchesRisk;
     });
 
     renderOverview(filteredData);
@@ -449,3 +462,24 @@ stateFilter.addEventListener('change', () => {
 });
 muniFilter.addEventListener('change', applyFilters);
 geoSearchInput.addEventListener('input', applyFilters);
+
+// Risk Card Filtering
+document.querySelectorAll('.filter-card').forEach(card => {
+    card.addEventListener('click', () => {
+        const filter = card.getAttribute('data-filter');
+        
+        if (currentRiskFilter === filter) {
+            currentRiskFilter = 'total';
+        } else {
+            currentRiskFilter = filter;
+        }
+
+        // Update UI
+        document.querySelectorAll('.filter-card').forEach(c => c.classList.remove('active'));
+        if (currentRiskFilter !== 'total') {
+            card.classList.add('active');
+        }
+
+        applyFilters();
+    });
+});

@@ -39,27 +39,41 @@
             </div>
 
             <div class="metric-group">
-                <div class="metric-card" id="card-total">
-                    <span class="metric-label">Total interacciones</span>
-                    <div class="metric-value" id="total-users">0</div>
+                <div class="metric-card filter-card" id="card-total" data-filter="total">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="metric-label">Total interacciones</span>
+                            <div class="metric-value" id="total-users">0</div>
+                        </div>
+                        <div class="gender-mini-stats">
+                            <div class="gender-item">
+                                <span class="gender-icon">👩</span>
+                                <span class="gender-count" id="total-women">0</span>
+                            </div>
+                            <div class="gender-item">
+                                <span class="gender-icon">👨</span>
+                                <span class="gender-count" id="total-men">0</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="semaphore-group">
-                    <div class="semaphore-item alert">
+                    <div class="semaphore-item alert filter-card" id="card-red" data-filter="red">
                         <div class="icon-circle urgent">🚨</div>
                         <div class="sem-text">
                             <span class="sem-label">Alertas Rojas</span>
                             <span class="sem-value" id="total-emergencies">0</span>
                         </div>
                     </div>
-                    <div class="semaphore-item warning">
+                    <div class="semaphore-item warning filter-card" id="card-orange" data-filter="orange">
                         <div class="icon-circle warning">⚠️</div>
                         <div class="sem-text">
                             <span class="sem-label">Riesgo Alto</span>
                             <span class="sem-value" id="total-atention">0</span>
                         </div>
                     </div>
-                    <div class="semaphore-item healthy">
+                    <div class="semaphore-item healthy filter-card" id="card-green" data-filter="green">
                         <div class="icon-circle healthy">✅</div>
                         <div class="sem-text">
                             <span class="sem-label">Riesgo Leve</span>
