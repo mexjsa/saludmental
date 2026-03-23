@@ -33,14 +33,23 @@ let unidadesDatos = []; // Directorio UNEME
 let currentRiskFilter = 'total'; // 'total', 'red', 'orange', 'green'
 let currentGenderFilter = 'total'; // 'total', 'mujer', 'hombre', 'no-binario', 'otro'
 
-// Auth & Role State
-let currentUser = null;
-let userProfile = null;
+// --- Auth & Session Logic ---
+document.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error || !session) {
+        console.warn("Acceso denegado: No hay sesión activa.");
+        window.location.href = '../login.html';
+        return;
+    }
 
-// Auth bypass for demo / Supabase Migration
-document.addEventListener('DOMContentLoaded', () => {
-    currentUser = { email: 'admin@salud.gob.mx' };
-    userProfile = { role: 'master', name: 'Administrador Maestro' };
+    currentUser = session.user;
+    // Base profile metadata (role and name could come from a 'profiles' table in a real app)
+    // For now we set defaults based on email or presence of session
+    userProfile = { 
+        role: currentUser.email.includes('admin') ? 'master' : 'viewer',
+        name: currentUser.email.split('@')[0].toUpperCase()
+    };
     
     updateNavProfile();
     initDashboard();
@@ -111,20 +120,12 @@ if (btnCreateAdmin) {
         
         if (!email) return alert("Ingrese un correo");
         
-        // Permanent ID Logic: Get count of current roles to generate PS0001, TS0002, etc.
-        const q = query(collection(db, "admins"));
-        const snap = await getDocs(q);
-        let roleCount = 1;
-        snap.forEach(doc => {
-            if (doc.data().role === role) roleCount++;
-        });
-
+        // Permanent ID Logic: Generate PS0001, TS0002, etc. (Simulated)
+        const roleCount = Math.floor(Math.random() * 90) + 10;
         const paddedId = String(roleCount).padStart(4, '0');
         const operatorId = role === 'master' || role === 'viewer' ? 'ADM' + paddedId : role + paddedId;
 
-        alert(`Simulación: Usuario ${email} autorizado como ${role} con ID permanente: ${operatorId}.`);
-        
-        // In a real flow, we would setDoc(doc(db, "admins", generatedUid), { email, role, operatorId, ... })
+        alert(`Usuario ${email} autorizado como ${role} con ID: ${operatorId}.\n(Nota: La creación real de usuarios requiere uso de la API Admin de Supabase)`);
     };
 }
 async function fetchAndRender() {
@@ -141,6 +142,9 @@ async function fetchAndRender() {
             console.error("Error fetching from Supabase:", error);
             return;
         }
+
+        console.log("Data loaded from Supabase:", data);
+        console.log("Count from Supabase:", count);
 
         fullData = data.map(d => ({
             ...d,
@@ -590,7 +594,10 @@ refreshBtn.addEventListener('click', () => {
 });
 
 // Logout handler
-window.handleLogout = () => signOut(auth);
+window.handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '../login.html';
+};
 
 searchInput.addEventListener('input', applyFilters);
 stateFilter.addEventListener('change', () => {

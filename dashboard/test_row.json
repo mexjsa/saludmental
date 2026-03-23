@@ -1,0 +1,1 @@
+[{"name": "DEBUG TEST", "age_range": "18-21", "gender": "mujer", "tipo_ubicacion": "cp", "codigo_postal": "01000", "estado": "CDMX", "municipio": "Alvaro Obregon", "colonia": "San Angel", "k10_score": 15, "phq9_score": 5, "suicide_flag": false, "source": "debug"}]

@@ -104,12 +104,6 @@ const PHQ9_QUESTIONS = [
     "¿Ha pensado que estaría mejor muerto/a o de lastimarse de alguna manera?"
 ];
 
-const SUBSTANCE_ITEMS = [
-    "Tabaco o vapeadores",
-    "Bebidas con alcohol (cerveza, vino, azulitos, etc.)",
-    "Marihuana, pastillas sin receta médica (como tranquilizantes) o algún otro tipo de droga."
-];
-
 // Phase Configuration
 const FLOW = {
     WELCOME: {
@@ -485,6 +479,13 @@ function showInputFallback(onSend) {
             onSend(val);
         }
     };
+
+    // Fix: Add Enter key listener
+    input.onkeyup = (e) => {
+        if (e.key === 'Enter') {
+            btn.click();
+        }
+    };
 }
 
 const CRISIS_KEYWORDS = [
@@ -517,20 +518,7 @@ function terminateChat(farewell) {
 
 // --- Results & Scoring ---
 
-async function saveResult(data) {
-    try {
-        const { error } = await supabase
-            .from('conasama_responses')
-            .insert([{
-                ...data,
-                source: 'production'
-            }]);
-        if (error) throw error;
-        console.log("Chat log saved successfully to Supabase");
-    } catch (e) {
-        console.error("Error saving chat log to Supabase:", e);
-    }
-}
+
 
 async function calculateFinalResults() {
     optionsContainer.innerHTML = '';

@@ -81,8 +81,7 @@
     </div>
 
     <script type="module">
-        import { auth } from './firebase-config.js';
-        import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { supabase } from './supabase-config.js';
 
         const form = document.getElementById('login-form');
         const errorEl = document.getElementById('error-msg');
@@ -91,14 +90,21 @@
             e.preventDefault();
             errorEl.style.display = 'none';
             const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
+            const password = document.getElementById('password').value;
 
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+
+                if (error) throw error;
+                
                 window.location.href = 'dashboard/index.html';
             } catch (err) {
                 console.error(err);
                 errorEl.style.display = 'block';
+                errorEl.innerText = "Error: " + (err.message || "Credenciales inválidas.");
             }
         };
     </script>
