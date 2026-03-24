@@ -151,6 +151,17 @@ async function fetchAndRender() {
 
         if (error) {
             console.error("Error fetching from Supabase:", error);
+            // Si hay error de RLS o de tabla, mostramos una alerta técnica
+            const tbody = document.getElementById('leads-tbody');
+            if (tbody) tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--urgent);">⚠️ Error de Conexión: ${error.message}. Verifique las políticas RLS en Supabase.</td></tr>`;
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            console.warn("La base de datos está vacía. Iniciando Carga de Muestra (Auto-Seed)...");
+            // Intentar cargar datos de prueba si está vacío para no ver un panel muerto
+            tbodyEl.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--warning);">Cargando Datos de Muestra...</td></tr>`;
+            seedMockData(); 
             return;
         }
 
