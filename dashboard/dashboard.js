@@ -36,7 +36,7 @@ let currentGenderFilter = 'total'; // 'total', 'mujer', 'hombre', 'no-binario', 
 // --- Auth & Session Logic ---
 document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
-    
+
     if (error || !session) {
         console.warn("Acceso denegado: No hay sesión activa.");
         window.location.href = '../login.html';
@@ -46,11 +46,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentUser = session.user;
     // Base profile metadata (role and name could come from a 'profiles' table in a real app)
     // For now we set defaults based on email or presence of session
-    userProfile = { 
+    userProfile = {
         role: currentUser.email.includes('admin') ? 'master' : 'viewer',
         name: currentUser.email.split('@')[0].toUpperCase()
     };
-    
+
     updateNavProfile();
     initDashboard();
 });
@@ -66,10 +66,10 @@ function updateNavProfile() {
 
     if (userProfile) {
         navName.innerText = userProfile.name || currentUser.email.split('@')[0].toUpperCase();
-        navRole.innerText = userProfile.role === 'master' ? 'Administrador Maestro' : 
-                          userProfile.role === 'PS' ? 'Psicólogo Especialista' :
-                          userProfile.role === 'TS' ? 'Trabajador Social' : 'Consultor';
-        
+        navRole.innerText = userProfile.role === 'master' ? 'Administrador Maestro' :
+            userProfile.role === 'PS' ? 'Psicólogo Especialista' :
+                userProfile.role === 'TS' ? 'Trabajador Social' : 'Consultor';
+
         if (userProfile.avatarUrl) {
             navAvatar.src = userProfile.avatarUrl;
         }
@@ -80,7 +80,7 @@ function updateNavProfile() {
         const now = new Date();
         const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
         const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-        
+
         if (navDate) navDate.innerText = now.toLocaleDateString('es-ES', dateOptions);
         if (navTime) navTime.innerText = now.toLocaleTimeString('en-US', timeOptions);
     };
@@ -117,9 +117,9 @@ if (btnCreateAdmin) {
         const email = document.getElementById('new-admin-email').value;
         const role = document.getElementById('new-admin-role').value;
         const regions = document.getElementById('new-admin-regions').value.split(',').map(r => r.trim()).filter(r => r);
-        
+
         if (!email) return alert("Ingrese un correo");
-        
+
         // Permanent ID Logic: Generate PS0001, TS0002, etc. (Simulated)
         const roleCount = Math.floor(Math.random() * 90) + 10;
         const paddedId = String(roleCount).padStart(4, '0');
@@ -135,7 +135,7 @@ async function fetchAndRender() {
         const { data, error, count } = await supabase
             .from('conasama_responses')
             .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
             .limit(2000);
 
         if (error) {
@@ -171,7 +171,7 @@ async function fetchAndRender() {
         const { data, error } = await supabase
             .from('unidades_apoyo')
             .select('*');
-        
+
         if (error) {
             console.error("Error cargando UNEMEs:", error);
             return;
@@ -195,7 +195,7 @@ async function fetchAndRender() {
             }
         )
         .subscribe();
-    
+
     listenToPresence();
 }
 
@@ -226,11 +226,11 @@ function renderOverview(data) {
     if (currentRiskFilter !== 'total') {
         totalUsersEl.innerText = total;
     }
-    
+
     totalEmergenciesEl.innerText = emergencies;
     totalAttentionEl.innerText = attention;
     totalLeveEl.innerText = leve;
-    
+
     if (womenCountEl) womenCountEl.innerText = women;
     if (menCountEl) menCountEl.innerText = men;
     if (nbCountEl) nbCountEl.innerText = nb;
@@ -248,12 +248,12 @@ let markersLayer = L.layerGroup();
 
 function initMap() {
     if (!map) {
-        map = L.map('riskMap', { 
-            zoomControl: true, 
+        map = L.map('riskMap', {
+            zoomControl: true,
             dragging: true,
-            scrollWheelZoom: false 
+            scrollWheelZoom: false
         }).setView([23.6345, -102.5528], 5);
-        
+
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
@@ -268,7 +268,7 @@ function initMap() {
 function populateFilters() {
     const states = [...new Set(fullData.map(d => d.state || d.estado))].filter(Boolean).sort();
     const currentState = stateFilter.value;
-    
+
     stateFilter.innerHTML = '<option value="">Todos los Estados</option>';
     states.forEach(s => {
         const opt = document.createElement('option');
@@ -313,7 +313,7 @@ function applyFilters() {
         const matchesState = !stateVal || (d.state || d.estado) === stateVal;
         const matchesMuni = !muniVal || (d.municipio || d.municipality) === muniVal;
         const matchesGeo = !geoVal || (d.codigo_postal || '').toLowerCase().includes(geoVal);
-        
+
         let matchesRisk = true;
         if (currentRiskFilter === 'red') matchesRisk = d.suicideFlag;
         else if (currentRiskFilter === 'orange') matchesRisk = !d.suicideFlag && (d.phq9Score >= 10 || d.k10Score >= 25);
@@ -330,13 +330,13 @@ function applyFilters() {
     renderOverview(filteredData);
     renderMap(filteredData);
     renderTable(filteredData);
-    
+
     zoomToFilter(stateVal, muniVal);
 }
 
 function zoomToFilter(state, muni) {
     if (!map) return;
-    
+
     if (muni && filteredData.length > 0) {
         // Zoom to municipality average
         const validCoords = filteredData.filter(d => d.coords && d.coords.lat);
@@ -365,7 +365,7 @@ function renderMap(data) {
     // Clear previous markers
     markersLayer.clearLayers();
 
-// Redibujar marcadores de riesgos
+    // Redibujar marcadores de riesgos
     data.forEach(d => {
         let lat, lon;
         let isMock = false;
@@ -391,7 +391,7 @@ function renderMap(data) {
                 markerColor = '#f59e0b'; // Naranja (Riesgo Alto)
                 riskLabel = 'Alto Riesgo';
             }
-            
+
             L.circleMarker([lat, lon], {
                 radius: 4,
                 fillColor: markerColor,
@@ -400,7 +400,7 @@ function renderMap(data) {
                 opacity: 1,
                 fillOpacity: 0.8
             }).addTo(markersLayer)
-              .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}<br>${d.municipio || d.municipality || ''}, ${d.estado || d.state || ''}${isMock ? ' (Zona Aprox)' : ''}`);
+                .bindPopup(`<b>${d.name || 'Anónimo'}</b><br>Riesgo: ${riskLabel}<br>${d.municipio || d.municipality || ''}, ${d.estado || d.state || ''}${isMock ? ' (Zona Aprox)' : ''}`);
         }
     });
 
@@ -415,12 +415,12 @@ function renderMap(data) {
                 iconAnchor: [4, 4]
             });
 
-            const marker = L.marker([u.latitud, u.longitud], { 
+            const marker = L.marker([u.latitud, u.longitud], {
                 icon: healthIcon,
                 opacity: 0 // Empezamos ocultos
             })
-            .addTo(markersLayer)
-            .bindTooltip(`
+                .addTo(markersLayer)
+                .bindTooltip(`
                 <div style="padding:5px;">
                     <b style="color:#6366f1;">🏥 ${u.nombre_unidad}</b><br>
                     <small>${u.institucion}</small><br>
@@ -449,7 +449,7 @@ function renderMap(data) {
 function renderOrdinalIcon(score, type) {
     let icon = '';
     let color = '';
-    
+
     if (type === 'k10') {
         if (score >= 30) { icon = '↓'; color = 'var(--urgent)'; }
         else if (score >= 25) { icon = '↘'; color = 'var(--warning)'; }
@@ -462,20 +462,20 @@ function renderOrdinalIcon(score, type) {
         else if (score >= 5) { icon = '↗'; color = '#eab308'; }
         else { icon = '↑'; color = 'var(--healthy)'; }
     }
-    
+
     return `<span class="ordinal-icon" style="background:${color};">${icon}</span>`;
 }
 
 function renderTable(data) {
     tbodyEl.innerHTML = '';
     data.forEach(d => {
-        const time = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+        const time = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
         const statusClass = d.suicideFlag ? 'badge-red' : (d.phq9Score >= 10 || d.k10Score >= 25) ? 'badge-orange' : 'badge-green';
         const statusText = d.suicideFlag ? 'ALERTA ROJA' : (d.phq9Score >= 10 || d.k10Score >= 25) ? 'Riesgo Alto' : 'Normal';
 
         const tr = document.createElement('tr');
         const isTest = d.source === 'test_seed';
-        const location = d.tipo_ubicacion === 'cp' 
+        const location = d.tipo_ubicacion === 'cp'
             ? `${d.colonia || ''}, ${d.municipio || ''}<br><span style="color:var(--text-muted); font-size:0.75rem;">${d.estado || ''} (${d.codigo_postal})</span>`
             : `${d.municipality || ''}<br><span style="color:var(--text-muted); font-size:0.75rem;">${d.state || '-'}</span>`;
 
@@ -491,7 +491,7 @@ function renderTable(data) {
             <td>
                 <div style="display:flex; align-items:center; gap:0.5rem;">
                     <div style="width:24px; height:24px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:0.6rem; font-weight:800;">
-                        ${d.operatorId ? d.operatorId.substring(0,2) : 'PS'}
+                        ${d.operatorId ? d.operatorId.substring(0, 2) : 'PS'}
                     </div>
                     <span style="font-size:0.75rem; font-weight:600;">${d.operatorId || 'PS0024'}</span>
                 </div>
@@ -511,7 +511,7 @@ async function getRandomCP() {
             .from('postal_codes')
             .select('*')
             .limit(100); // Get a batch and pick one
-            
+
         if (data && data.length > 0) {
             const item = data[Math.floor(Math.random() * data.length)];
             return {
@@ -522,7 +522,7 @@ async function getRandomCP() {
                 coords: { lat: item.lat, lon: item.lon }
             };
         }
-        
+
         // Fallback local
         const prefix = CP_PREFIXES[Math.floor(Math.random() * CP_PREFIXES.length)];
         const res = await fetch(`../api/cp/${prefix}.json`);
@@ -549,7 +549,7 @@ async function seedMockData() {
         const suicide = Math.random() > 0.85;
         const k10 = suicide ? (Math.floor(Math.random() * 21) + 30) : (Math.floor(Math.random() * 41) + 10);
         let phq = 0;
-        
+
         if (suicide) {
             phq = 24;
         } else {
@@ -611,7 +611,7 @@ geoSearchInput.addEventListener('input', applyFilters);
 document.querySelectorAll('.filter-card').forEach(card => {
     card.addEventListener('click', () => {
         const filter = card.getAttribute('data-filter');
-        
+
         if (currentRiskFilter === filter) {
             currentRiskFilter = 'total';
         } else {
@@ -633,7 +633,7 @@ document.querySelectorAll('.filter-gender').forEach(item => {
     item.addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent triggering the parent card click
         const gender = item.getAttribute('data-gender');
-        
+
         if (currentGenderFilter === gender) {
             currentGenderFilter = 'total';
         } else {
