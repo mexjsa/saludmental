@@ -35,7 +35,18 @@ let currentGenderFilter = 'total'; // 'total', 'mujer', 'hombre', 'no-binario', 
 
 // --- Auth & Session Logic ---
 document.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    // --- BYPASS SKNET PARA GITHUB PAGES ---
+    let session = null;
+    let error = null;
+
+    if (window.location.hostname.includes('github.io') || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log("Bypass SKNET: Simulando sesión de Administrador...");
+        session = { user: { email: 'admin@conasama.gob.mx' } };
+    } else {
+        const result = await supabase.auth.getSession();
+        session = result.data.session;
+        error = result.error;
+    }
 
     if (error || !session) {
         console.warn("Acceso denegado: No hay sesión activa.");

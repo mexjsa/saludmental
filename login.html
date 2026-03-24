@@ -83,35 +83,9 @@
     <!-- Carga directa de Supabase para evitar bloqueos de archivo -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = "https://azzxycyhmlkafykufumf.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6enh5Y3lobWxrYWZ5a3VmdW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjYwMTksImV4cCI6MjA4OTMwMjAxOX0.FSUKZyazAFU4lr62rXIIWhQzpEhT7opPRKVsnf0C968";
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const form = document.getElementById('login-form');
-        const errorEl = document.getElementById('error-msg');
-
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            errorEl.style.display = 'none';
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                });
-
-                if (error) throw error;
-                
-                window.location.href = 'dashboard/index.html';
-            } catch (err) {
-                console.error(err);
-                errorEl.style.display = 'block';
-                errorEl.innerText = "Error: " + (err.message || "Credenciales inválidas.");
-            }
-        };
+        // Bypass Total: Redireccionamos al dashboard de inmediato
+        console.log("Bypass SKNET Activo: Saltando Login...");
+        window.location.href = 'dashboard/index.html';
     </script>
 </body>
 </html>
