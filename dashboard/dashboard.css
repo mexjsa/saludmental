@@ -619,9 +619,17 @@ body.dashboard-body {
 
 /* Bottom Table Section */
 .table-section-footer {
-    min-height: 380px;
     display: flex;
     flex-direction: column;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px;
+    flex-grow: 1;
+    margin-top: 1.2rem;
+    border-radius: 12px;
 }
 
 .table-header h3 {
