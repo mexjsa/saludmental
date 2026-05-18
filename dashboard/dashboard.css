@@ -396,38 +396,72 @@ body.dashboard-body {
 }
 
 /* User identity header navigation card */
+/* User identity header navigation card */
 .user-profile-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
     background: rgba(15, 23, 42, 0.45) !important;
     border: 1px solid var(--panel-border) !important;
     backdrop-filter: var(--panel-blur);
     -webkit-backdrop-filter: var(--panel-blur);
-    padding: 0.6rem 1.5rem;
+    padding: 0.5rem 1.2rem;
     border-radius: 50px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 }
 
 .nav-info-group {
-    border-right-color: rgba(255, 255, 255, 0.08) !important;
-    padding-right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding-right: 1.2rem;
+    gap: 0.1rem;
 }
 
 .current-time {
     color: var(--text-main);
     font-weight: 700;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.5px;
+}
+
+.location-date {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: flex-end;
 }
 
 .current-city {
     color: var(--text-gold) !important;
+    font-size: 0.72rem;
+    font-weight: 600;
 }
 
 .current-date {
     color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
 }
 
 .nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     background: rgba(255, 255, 255, 0.03) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    font-size: 0.9rem;
     color: var(--text-muted);
 }
 
@@ -435,27 +469,79 @@ body.dashboard-body {
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     color: var(--text-main);
+    transform: translateY(-1px);
 }
 
 .nav-btn .btn-icon {
     filter: invert(1) brightness(0.9) !important;
 }
 
+.notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: var(--urgent);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 800;
+    min-width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #0c1424;
+}
+
+.user-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding-left: 0.5rem;
+}
+
+.user-text {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
 .user-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 800;
     color: var(--text-main);
 }
 
 .user-role {
     color: var(--text-gold);
     font-weight: 600;
+    font-size: 0.72rem;
+}
+
+.user-avatar-wrapper {
+    position: relative;
+    width: 38px;
+    height: 38px;
 }
 
 .user-avatar {
-    border-color: rgba(255, 255, 255, 0.1) !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .status-dot {
-    border-color: #0b1524 !important;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 10px;
+    height: 10px;
+    background: var(--healthy);
+    border-radius: 50%;
+    border: 2px solid #0c1424 !important;
 }
 
 /* Glass Panels Containers */
@@ -622,11 +708,17 @@ tr:hover td {
 
 /* Glowing Neon Badges */
 .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
     border-radius: 8px;
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.5px;
-    padding: 0.4rem 1rem;
+    padding: 0.4rem 0.8rem;
+    min-width: 95px;
+    text-align: center;
     box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
 }
 
