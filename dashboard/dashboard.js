@@ -3,6 +3,10 @@ import { supabase } from '../supabase-config.js';
 const CHAT_LOG_COLLECTION = "conasama_responses";
 const PRESENCE_COLLECTION = "presence";
 
+// Declarar variables globales omitidas para evitar ReferenceError en ES Modules (Strict Mode)
+let currentUser = null;
+let userProfile = null;
+
 // Chart & Map instances
 let map;
 
@@ -276,7 +280,7 @@ function initMap() {
             scrollWheelZoom: false
         }).setView([23.6345, -102.5528], 5);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
 
